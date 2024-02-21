@@ -17,16 +17,16 @@
   "autoload": {
     "psr-4": {
       "Drupal\\risley_export\\": "src/"
-    }
+    },
+    "files": [
+      "risley_export.info.yml",
+      "risley_export.services.yml"
+    ]
   },
   "extra": {
     "installer-paths": {
       "docroot/modules/custom/{$name}/": ["type:drupal-custom-module"]
     },
     "installer-name": "risley_export"
-  },
-  "files": [
-    "risley_export.info.yml",
-    "risley_export.services.yml"
-  ]
+  }
 }
