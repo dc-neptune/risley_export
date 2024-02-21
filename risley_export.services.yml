@@ -1,0 +1,21 @@
+services:
+  risley_export.base_sheet_factory:
+    class: Drupal\risley_export\Sheets\Factory\BaseSheetFactory
+    arguments:
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@plugin.manager.field.field_type'
+      - '@language_manager'
+      - '@config.factory'
+      - '@entity_type.bundle.info'
+      - '@entity.repository'
+      - '@extension.list.module'
+      - '@user.permissions'
+      - '@logger.factory'
+      - '@info_parser'
+  risley_export.commands:
+    class: \Drupal\risley_export\Commands\RisleyExportCommands
+    arguments:
+      - '@risley_export.base_sheet_factory'
+    tags:
+      - { name: drush.command }

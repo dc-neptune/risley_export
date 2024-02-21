@@ -1,0 +1,29 @@
+{
+  "name": "risley/risley_export",
+  "description": "Exports drupalsettings into Excel files according to Risley format.",
+  "type": "drupal-custom-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "composer/installers": "^1.9",
+    "drupal/core": "^10",
+    "phpoffice/phpspreadsheet": "^2.0"
+  },
+  "authors": [
+    {
+      "name": "Ben Neptune",
+      "email": "neptune@dgcircus.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Drupal\\risley_export\\": "src/"
+    }
+  },
+  "extra": {
+    "installer-name": "risley_export"
+  },
+  "files": [
+    "risley_export.info.yml",
+    "risley_export.services.yml"
+  ]
+}
