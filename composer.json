@@ -4,7 +4,7 @@
   "type": "drupal-custom-module",
   "license": "GPL-2.0-or-later",
   "require": {
-    "composer/installers": "^1.9",
+    "composer/installers": "^2.2",
     "drupal/core": "^10",
     "phpoffice/phpspreadsheet": "^2.0"
   },
