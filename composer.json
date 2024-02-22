@@ -25,7 +25,7 @@
   },
   "extra": {
     "installer-paths": {
-      "docroot/modules/custom/{$name}/": ["type:drupal-custom-module"]
+      "modules/custom/{$name}": ["type:drupal-custom-module"]
     },
     "installer-name": "risley_export"
   }
