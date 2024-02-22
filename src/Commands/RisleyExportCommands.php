@@ -79,7 +79,7 @@ class RisleyExportCommands extends DrushCommands {
    * @usage risley_export:export --no-readonly
    *   Exports content types and fields excluding readonly fields.
    */
-  public function exportSheetData(array $options = ['path' => '../dev', 'no-readonly' => FALSE]): void {
+  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'no-readonly' => FALSE]): void {
     $this->options = $options;
     $this->path = $options['path'];
 
@@ -95,7 +95,14 @@ class RisleyExportCommands extends DrushCommands {
   private function buildSpreadsheet(string $filename = 'excel_sheet', array $sheetNames = ['Version']): void {
     try {
       if (!file_exists($this->path) || !is_writable($this->path)) {
-        throw new \Exception(dt('Invalid directory path or the directory is not writable.'));
+        if ($this->path === 'modules/custom/risley_export/files') {
+          if (!mkdir($this->path, 0775, TRUE) && !is_dir($this->path)) {
+            throw new \Exception(dt('Failed to create the directory.'));
+          }
+        }
+        else {
+          throw new \Exception(dt('Invalid directory path or the directory is not writable.'));
+        }
       }
 
       $absolutePath = realpath($this->path);
@@ -109,7 +116,6 @@ class RisleyExportCommands extends DrushCommands {
       $this->logger()?->error($e->getMessage());
       exit;
     }
-
     $this->spreadsheet = new Spreadsheet();
 
     foreach ($sheetNames as $sheetName) {

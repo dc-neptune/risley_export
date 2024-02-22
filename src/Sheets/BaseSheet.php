@@ -499,7 +499,7 @@ class BaseSheet {
       }
 
       foreach ($criteria as $criterion) {
-        if (!is_array($criterion)) {
+        if (!is_array($criterion) || !array_key_exists('bundles', $criterion)) {
           return FALSE;
         }
 

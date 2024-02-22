@@ -28,5 +28,10 @@ $baseSheetFactory = new BaseSheetFactory(
 );
 
 // Create an instance of your command class with the required services.
-$command = new RisleyExportCommands($baseSheetFactory);
-$command->exportSheetData();
+// @todo Figure out why exceptions and loggers are not getting passed
+try {
+    $command = new RisleyExportCommands($baseSheetFactory);
+    $command->exportSheetData();
+} catch (\Exception $e) {
+    echo 'Exception caught: ',  $e->getMessage(), "\n";
+}
