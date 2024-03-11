@@ -53,7 +53,7 @@ class ContribModulesSheet extends BaseSheet {
       $number = '=ROW()-1';
       $label = $module->info['name'] ?? '';
       $machineName = $module->getName();
-      $status = $this->buildCheck($module->status === 1);
+      $status = $this->buildCheck($this->moduleHandler->moduleExists($machineName));
       $remark = $this->getModuleDescription($module);
 
       $this->setCell($sheet, 'A', $row, $number);

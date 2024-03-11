@@ -52,13 +52,13 @@ class CoreModulesSheet extends BaseSheet {
     foreach ($modules as $module) {
       $number = '=ROW()-1';
       $label = $module->info['name'] ?? '';
-      $machine_name = $module->getName();
-      $status = $this->buildCheck($module->status === 1);
+      $machineName = $module->getName();
+      $status = $this->buildCheck($this->moduleHandler->moduleExists($machineName));
       $remark = $this->getModuleDescription($module);
 
       $this->setCell($sheet, 'A', $row, $number);
       $this->setCell($sheet, 'B', $row, $label);
-      $this->setCell($sheet, 'C', $row, $machine_name);
+      $this->setCell($sheet, 'C', $row, $machineName);
       $this->setCell($sheet, 'D', $row, $status);
       $this->setCell($sheet, 'E', $row, $remark);
 

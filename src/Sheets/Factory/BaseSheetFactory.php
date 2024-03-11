@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\InfoParserInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -120,6 +121,13 @@ class BaseSheetFactory {
   protected $infoParser;
 
   /**
+   * The module handler interface.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs a new BaseSheetFactory object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -144,6 +152,8 @@ class BaseSheetFactory {
    *   The logger factory.
    * @param \Drupal\Core\Extension\InfoParserInterface $info_parser
    *   The Info Parser service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler interface.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -156,7 +166,8 @@ class BaseSheetFactory {
     ModuleExtensionList $module_extension_list,
     PermissionHandlerInterface $user_permissions,
     LoggerChannelFactoryInterface $logger_factory,
-    InfoParserInterface $info_parser
+    InfoParserInterface $info_parser,
+    ModuleHandlerInterface $module_handler
   ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -170,6 +181,7 @@ class BaseSheetFactory {
     $this->logger = $logger_factory->get('risley_export');
     $this->localization = $this->buildLocalization();
     $this->infoParser = $info_parser;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -195,7 +207,8 @@ class BaseSheetFactory {
       $this->userPermissions,
       $this->logger,
       $this->localization,
-      $this->infoParser
+      $this->infoParser,
+      $this->moduleHandler
     );
     $customSheet->setSpreadsheet($spreadsheet, $options);
     return $customSheet->sheet;

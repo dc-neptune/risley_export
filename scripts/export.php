@@ -24,7 +24,8 @@ $baseSheetFactory = new BaseSheetFactory(
   \Drupal::service('extension.list.module'),
   \Drupal::service('user.permissions'),
   \Drupal::service('logger.factory'),
-  \Drupal::service('info_parser')
+  \Drupal::service('info_parser'),
+  \Drupal::service('module_handler')
 );
 
 // Create an instance of your command class with the required services.

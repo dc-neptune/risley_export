@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\InfoParserInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Field\Entity\BaseFieldOverride;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -163,6 +164,13 @@ class BaseSheet {
   protected $infoParser;
 
   /**
+   * The module handler interface.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -189,6 +197,8 @@ class BaseSheet {
    *   The localization.
    * @param \Drupal\Core\Extension\InfoParserInterface $info_parser
    *   The Info Parser service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler interface.
    */
   public function __construct(
         EntityFieldManagerInterface $entity_field_manager,
@@ -202,7 +212,8 @@ class BaseSheet {
         PermissionHandlerInterface $user_permissions,
         LoggerInterface $logger,
         array $localization,
-        InfoParserInterface $info_parser
+        InfoParserInterface $info_parser,
+        ModuleHandlerInterface $module_handler
     ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -218,6 +229,7 @@ class BaseSheet {
     $this->logger = $logger;
     $this->localization = $localization;
     $this->infoParser = $info_parser;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -674,7 +686,7 @@ class BaseSheet {
    * @param string $origin
    *   Filter the list by origin: 'all', 'core', 'contrib', or 'custom'.
    *
-   * @return array
+   * @return \Drupal\Core\Extension\Extension[]
    *   An array of modules filtered by the specified origin.
    */
   protected function getModules(string $origin = 'all'): array {
