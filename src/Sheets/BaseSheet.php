@@ -24,7 +24,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -737,14 +737,14 @@ class BaseSheet {
     }
 
     // Key does not exist, so add it to the sheet.
-    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Localization/Localization.xls';
+    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Localization/Localization.xlsx';
 
     try {
       $spreadsheet = IOFactory::load($filePath);
       $sheet = $spreadsheet->getActiveSheet();
       $newRow = $sheet->getHighestRow() + 1;
       $sheet->setCellValue('A' . $newRow, $string);
-      $writer = new Xls($spreadsheet);
+      $writer = new Xlsx($spreadsheet);
       $writer->save($filePath);
       return $default ?? $string;
     }

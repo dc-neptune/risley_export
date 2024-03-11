@@ -17,7 +17,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
-use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
  * A factory for BaseSheet.
@@ -206,7 +206,7 @@ class BaseSheetFactory {
    */
   public function buildLocalization(): array {
     $localization = [];
-    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Localization/Localization.xls';
+    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Localization/Localization.xlsx';
 
     // Check if file exists.
     if (!file_exists($filePath)) {
@@ -217,7 +217,7 @@ class BaseSheetFactory {
         ->setTitle("Localization");
 
       // Create a writer instance and save the file.
-      $writer = new Xls($spreadsheet);
+      $writer = new Xlsx($spreadsheet);
       try {
         $writer->save($filePath);
       }
@@ -257,7 +257,7 @@ class BaseSheetFactory {
       foreach ($duplicateRows as $rowNum) {
         $sheet->removeRow($rowNum);
       }
-      $writer = IOFactory::createWriter($spreadsheet, 'Xls');
+      $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
       $writer->save($filePath);
     }
     catch (Exception $e) {
