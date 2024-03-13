@@ -49,6 +49,7 @@ class PermissionsSheet extends BaseSheet {
    * Sets rows on the sheet.
    */
   protected function setRows(Worksheet $sheet, int $row): int {
+    $priorityPermissions = [];
     $permissions = $this->userPermissions->getPermissions();
     $roles = $this->getPermissionRoles();
 
@@ -57,7 +58,34 @@ class PermissionsSheet extends BaseSheet {
       $permissions[$key]['key'] = $key;
     }
 
+    // Prioritize permissions listed in settings.
+    if (
+      isset($this->settings['priorityPermissions']) &&
+      is_array($this->settings['priorityPermissions']) &&
+      !empty($this->settings['priorityPermissions'])
+    ) {
+      $groups = $this->settings['priorityPermissions'];
+      $priorityPermissions = array_filter($permissions, function ($permission) use ($groups) {
+        return in_array($this->moduleExtensionList->getExtensionInfo($permission['provider'])['name'], $groups);
+      });
+      usort($priorityPermissions, function ($a, $b) use ($groups) {
+        $providerA = $this->moduleExtensionList->getExtensionInfo($a['provider'])['name'] ?? $a['provider'];
+        $providerB = $this->moduleExtensionList->getExtensionInfo($b['provider'])['name'] ?? $b['provider'];
+        $configLabelA = $this->getConfigLabel($a);
+        $configLabelB = $this->getConfigLabel($b);
+
+        if ($providerA === $providerB) {
+          // Sort by configLabel if providerLabels are equal.
+          return $configLabelA <=> $configLabelB;
+        }
+
+        return array_search($providerA, $groups) <=> array_search($providerB, $groups);
+      });
+      $permissions = array_diff_key($permissions, $priorityPermissions);
+    }
+
     // Sort permissions by providerLabel and then by configLabel.
+    // foreach( [$priorityPermissions, $permissions] as $_permissions) {.
     usort($permissions, function ($a, $b) {
       $providerA = $this->moduleExtensionList->getExtensionInfo($a['provider'])['name'] ?? $a['provider'];
       $providerB = $this->moduleExtensionList->getExtensionInfo($b['provider'])['name'] ?? $b['provider'];
@@ -71,6 +99,8 @@ class PermissionsSheet extends BaseSheet {
       // Otherwise, sort by providerLabel.
       return $providerA <=> $providerB;
     });
+    // }
+    $permissions = array_merge($priorityPermissions, $permissions);
 
     // Pre-process to determine which providers have a configLabel.
     $providersWithConfig = [];

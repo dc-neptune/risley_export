@@ -64,7 +64,12 @@ class BaseSheet {
   /**
    * The options passed through the drush command.
    *
-   * @var array<mixed>
+   * @var array{
+   *     path: string,
+   *     no-readonly: bool,
+   *     file: string|null,
+   *     filename: string
+   *   }
    */
   protected $options;
 
@@ -171,6 +176,13 @@ class BaseSheet {
   protected $moduleHandler;
 
   /**
+   * The settings unique to this project.
+   *
+   * @var array<mixed>
+   */
+  protected $settings;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -199,6 +211,8 @@ class BaseSheet {
    *   The Info Parser service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler interface.
+   * @param array $settings
+   *   The settings.
    */
   public function __construct(
         EntityFieldManagerInterface $entity_field_manager,
@@ -213,7 +227,8 @@ class BaseSheet {
         LoggerInterface $logger,
         array $localization,
         InfoParserInterface $info_parser,
-        ModuleHandlerInterface $module_handler
+        ModuleHandlerInterface $module_handler,
+        array $settings
     ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -230,6 +245,7 @@ class BaseSheet {
     $this->localization = $localization;
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
+    $this->settings = $settings;
   }
 
   /**
@@ -238,6 +254,12 @@ class BaseSheet {
   public function setSpreadsheet(Spreadsheet $spreadsheet, array $options): void {
     $this->spreadsheet = $spreadsheet;
     $this->sheet = $spreadsheet->createSheet();
+    if (!isset($options['path']) || !is_string($options['path']) ||
+      !isset($options['no-readonly']) || !is_bool($options['no-readonly']) ||
+      (!is_string($options['file']) && $options['file'] !== NULL) ||
+      !isset($options['filename']) || !is_string($options['filename'])) {
+      throw new \InvalidArgumentException('Invalid options structure.');
+    }
     $this->options = $options;
     $this->initialize();
   }
@@ -735,7 +757,15 @@ class BaseSheet {
    */
   protected function getPermissionRoles(): array {
     $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
-    ksort($roles);
+
+    if (isset($this->settings['hideAdminister']) && $this->settings['hideAdminister'] && isset($roles['administrator'])) {
+      unset($roles['administrator']);
+    }
+
+    uasort($roles, function ($a, $b) {
+      return $a->get('weight') <=> $b->get('weight');
+    });
+
     return $roles;
   }
 

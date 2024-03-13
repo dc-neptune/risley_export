@@ -30,7 +30,7 @@ $baseSheetFactory = new BaseSheetFactory(
 
 try {
   $command = new RisleyExportCommands($baseSheetFactory);
-  $command->exportSheetData();
+  $command->exportSheetData(['path' => 'modules/custom/risley_export/files', 'no-readonly' => FALSE, 'file' => $_SERVER['argv'][4] ?? NULL, 'filename' => 'file.xlsx']);
 }
 catch (\Exception $e) {
   echo 'Exception caught: ', $e->getMessage(), "\n";

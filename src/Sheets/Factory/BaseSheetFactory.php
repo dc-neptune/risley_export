@@ -128,6 +128,13 @@ class BaseSheetFactory {
   protected $moduleHandler;
 
   /**
+   * The settings unique to this project.
+   *
+   * @var array<mixed>
+   */
+  protected $settings;
+
+  /**
    * Constructs a new BaseSheetFactory object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -182,6 +189,7 @@ class BaseSheetFactory {
     $this->localization = $this->buildLocalization();
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
+    $this->settings = $this->buildSettings();
   }
 
   /**
@@ -208,14 +216,15 @@ class BaseSheetFactory {
       $this->logger,
       $this->localization,
       $this->infoParser,
-      $this->moduleHandler
+      $this->moduleHandler,
+      $this->settings
     );
     $customSheet->setSpreadsheet($spreadsheet, $options);
     return $customSheet->sheet;
   }
 
   /**
-   * Converts the Localization.xls into a serviceable array.
+   * Converts the Localization.xlsx into a serviceable array.
    */
   public function buildLocalization(): array {
     $localization = [];
@@ -279,6 +288,20 @@ class BaseSheetFactory {
     }
 
     return $localization;
+  }
+
+  /**
+   * Converts the settings.php.
+   */
+  public function buildSettings(): array {
+    $settings = [];
+    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Settings/settings.php';
+
+    if (file_exists($filePath)) {
+      include $filePath;
+    }
+
+    return $settings;
   }
 
 }

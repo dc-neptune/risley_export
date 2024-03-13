@@ -37,7 +37,12 @@ class RisleyExportCommands extends DrushCommands {
   /**
    * The options passed through the drush command.
    *
-   * @var array<mixed>
+   * @var array{
+   *    path: string,
+   *    no-readonly: bool,
+   *    file: string|null,
+   *    filename: string
+   *  }
    */
   protected $options;
 
@@ -79,14 +84,29 @@ class RisleyExportCommands extends DrushCommands {
    * @usage risley_export:export --no-readonly
    *   Exports content types and fields excluding readonly fields.
    */
-  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'no-readonly' => FALSE]): void {
+  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'no-readonly' => FALSE, 'file' => NULL, 'filename' => 'file.xlsx']): void {
+    if (!isset($options['path']) || !is_string($options['path']) ||
+      !isset($options['no-readonly']) || !is_bool($options['no-readonly']) ||
+      (!is_string($options['file']) && $options['file'] !== NULL) ||
+      !isset($options['filename']) || !is_string($options['filename'])) {
+      var_dump($options);
+      throw new \InvalidArgumentException('Invalid options structure.');
+    }
     $this->options = $options;
     $this->path = $options['path'];
 
-    $this->buildSpreadsheet('drupalsettings_data', ['Version', 'Fields', 'Content', 'Taxonomies', 'Media', 'Paragraphs']);
-    $this->buildSpreadsheet('drupalsettings_modules', ['Version', 'CoreModules', 'ContribModules', 'CustomModules']);
-    $this->buildSpreadsheet('drupalsettings_permission', ['Version', 'Roles', 'Permissions', 'Workflows']);
-    $this->buildSpreadsheet('drupalsettings_content', ['Version', 'Menus', 'TaxonomiesForContent', 'ContentForContent', 'Redirects']);
+    if (!$this->options['file'] || $this->options['file'] === 'data') {
+      $this->buildSpreadsheet('drupalsettings_data', ['Version', 'Fields', 'Content', 'Taxonomies', 'Media', 'Paragraphs']);
+    }
+    if (!$this->options['file'] || $this->options['file'] === 'modules') {
+      $this->buildSpreadsheet('drupalsettings_modules', ['Version', 'CoreModules', 'ContribModules', 'CustomModules']);
+    }
+    if (!$this->options['file'] || $this->options['file'] === 'permissions') {
+      $this->buildSpreadsheet('drupalsettings_permissions', ['Version', 'Roles', 'Permissions', 'Workflows']);
+    }
+    if (!$this->options['file'] || $this->options['file'] === 'content') {
+      $this->buildSpreadsheet('drupalsettings_content', ['Version', 'Menus', 'TaxonomiesForContent', 'ContentForContent', 'Redirects']);
+    }
 
   }
 
@@ -111,7 +131,7 @@ class RisleyExportCommands extends DrushCommands {
         throw new \Exception(dt('Unable to resolve the absolute path of the specified directory.'));
       }
 
-      $this->filename = $absolutePath . DIRECTORY_SEPARATOR . "_$filename.xlsx";
+      $this->options['filename'] = $absolutePath . DIRECTORY_SEPARATOR . "_$filename.xlsx";
     }
     catch (\Exception $e) {
       $this->logger()?->error($e->getMessage());
@@ -152,12 +172,12 @@ class RisleyExportCommands extends DrushCommands {
     // Write file to the specified path.
     $writer = new Xlsx($this->spreadsheet);
     try {
-      $writer->save($this->filename);
-      if (!file_exists($this->filename)) {
+      $writer->save($this->options['filename']);
+      if (!file_exists($this->options['filename'])) {
         $this->logger()?->error(dt('Failed to create the file in the specified directory. Check permissions and path.'));
       }
-      elseif (file_exists($this->filename)) {
-        $this->logger()?->success(dt('Content types and fields have been exported to !filename', ['!filename' => $this->filename]));
+      elseif (file_exists($this->options['filename'])) {
+        $this->logger()?->success(dt('Content types and fields have been exported to !filename', ['!filename' => $this->options['filename']]));
       }
     }
     catch (\Exception $e) {

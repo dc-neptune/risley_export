@@ -16,10 +16,16 @@ class VersionSheet extends BaseSheet {
     $sheet = $this->sheet;
     $sheet->setTitle('Version');
 
+    $title = explode('_', $this->options['filename']);
+    $title = end($title);
+    $title = explode('.', $title)[0];
+    $title = ucfirst($title);
+    $title = "Drupal " . $title . " Structure";
+
     $this->setCell($sheet, "B", 1, "Project:");
     $this->setCell($sheet, "B", 2, "Title:");
-    $this->setCell($sheet, "C", 2, "Drupal データ項目仕様");
-    $this->setCell($sheet, "E", 2, "Drupal Data Structure");
+    $this->setCell($sheet, "C", 2, $this->translate($title));
+    $this->setCell($sheet, "E", 2, $title);
 
     $headers = [
       "No.", "Date", "Author", "Sheets", "Note",
