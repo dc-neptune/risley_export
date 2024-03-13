@@ -20,9 +20,18 @@
     }
   },
   "extra": {
-    "installer-paths": {
-      "docroot/modules/custom/{$name}": ["type:drupal-custom-module"]
-    },
-    "installer-name": "risley_export"
+    "drupal-scaffold": {
+      "file-mapping": {
+        "[web-root]/modules/custom/{$name}/Sheets/Settings/settings.php": {
+          "mode": "replace",
+          "path": "assets/risley_export/settings.php",
+          "overwrite": false
+        }
+      },
+      "installer-paths": {
+        "docroot/modules/custom/{$name}": ["type:drupal-custom-module"]
+      },
+      "installer-name": "risley_export"
+    }
   }
 }
