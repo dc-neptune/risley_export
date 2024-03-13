@@ -86,6 +86,7 @@ class RisleyExportCommands extends DrushCommands {
     $this->buildSpreadsheet('drupalsettings_data', ['Version', 'Fields', 'Content', 'Taxonomies', 'Media', 'Paragraphs']);
     $this->buildSpreadsheet('drupalsettings_modules', ['Version', 'CoreModules', 'ContribModules', 'CustomModules']);
     $this->buildSpreadsheet('drupalsettings_permission', ['Version', 'Roles', 'Permissions', 'Workflows']);
+    $this->buildSpreadsheet('drupalsettings_content', ['Version', 'Menus', 'TaxonomiesForContent', 'ContentForContent', 'Redirects']);
 
   }
 

@@ -13,6 +13,7 @@ services:
       - '@user.permissions'
       - '@logger.factory'
       - '@info_parser'
+      - '@module_handler'
   risley_export.commands:
     class: \Drupal\risley_export\Commands\RisleyExportCommands
     arguments:

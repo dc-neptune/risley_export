@@ -2,7 +2,6 @@
 
 namespace Drupal\risley_export\Sheets;
 
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -46,13 +45,7 @@ class ContentSheet extends BaseSheet {
       $sheet->getColumnDimension($col)->setWidth(6.5);
     }
 
-    $centerAlignmentStyle = [
-      'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-      ],
-    ];
-    $sheet->getStyle('E:T')->applyFromArray($centerAlignmentStyle);
+    $this->setStyleCenter('E:T');
   }
 
   /**

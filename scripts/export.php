@@ -28,8 +28,6 @@ $baseSheetFactory = new BaseSheetFactory(
   \Drupal::service('module_handler')
 );
 
-// Create an instance of your command class with the required services.
-// @todo Figure out why exceptions and loggers are not getting passed
 try {
   $command = new RisleyExportCommands($baseSheetFactory);
   $command->exportSheetData();

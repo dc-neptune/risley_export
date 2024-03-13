@@ -425,6 +425,12 @@ class BaseSheet {
       $sheet->getStyle($col . $endRow)->applyFromArray($bottomBorderStyle);
     }
 
+    // Now handle the merged cells specifically.
+    $mergedCells = $sheet->getMergeCells();
+    foreach ($mergedCells as $mergeRange) {
+      $sheet->getStyle($mergeRange)->applyFromArray($allBordersStyle);
+    }
+
   }
 
   /*
@@ -437,7 +443,7 @@ class BaseSheet {
    * If lastColumnValues is defined, it skips redundant rows.
    */
   protected function setCell(Worksheet $sheet, string $column, int $row, mixed $value, bool $skipRepeats = FALSE): void {
-    $sheet->setCellValue($column . $row, ($skipRepeats && isset($this->lastColumnValues[$column]) && $this->lastColumnValues[$column] == $value) ? "" : $value);
+    $sheet->setCellValue($column . $row, ($skipRepeats && $value !== ' ' && isset($this->lastColumnValues[$column]) && $this->lastColumnValues[$column] == $value) ? "" : $value);
     $this->lastColumnValues[$column] = $value;
 
     if ($skipRepeats) {
@@ -446,9 +452,21 @@ class BaseSheet {
   }
 
   /**
+   * Converts an int to a column letter, such as 2 -> C.
+   */
+  protected function intToCol(int $int): string {
+    $letter = '';
+    while ($int >= 0) {
+      $letter = chr($int % 26 + 65) . $letter;
+      $int = intdiv($int, 26) - 1;
+    }
+    return $letter;
+  }
+
+  /**
    * Increments alphabetic columns in excel. A->B->AA, etc.
    */
-  protected function incrementColumn(string $col): string {
+  protected function incrementColumn(string $col, int $increment = 1): string {
     $length = strlen($col);
     $result = '';
     while ($length > 0) {
@@ -463,7 +481,7 @@ class BaseSheet {
         }
       }
       else {
-        $col[$length] = chr($c + 1);
+        $col[$length] = chr($c + $increment);
         $col = substr($col, 0, $length + 1) . $result;
         break;
       }
@@ -475,7 +493,7 @@ class BaseSheet {
    * Sets true or false display.
    */
   protected function buildCheck(mixed $bool, string $trueLabel = "", string $falseLabel = ""): string {
-    return $bool ? "○" . $trueLabel : "-" . $falseLabel;
+    return $bool ? "●" . $trueLabel : "☓" . $falseLabel;
   }
 
   /**
@@ -776,6 +794,26 @@ class BaseSheet {
       return $this->translate($description);
     }
     return '';
+  }
+
+  /**
+   * Changes string to kebab case.
+   */
+  protected function toKebabCase(string $string):string {
+    return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($string)) ?? '', '-');
+  }
+
+  /**
+   * Centers stuff.
+   */
+  protected function setStyleCenter(string $range):void {
+    $centerAlignmentStyle = [
+      'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+      ],
+    ];
+    $this->sheet->getStyle($range)->applyFromArray($centerAlignmentStyle);
   }
 
 }
