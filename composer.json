@@ -26,6 +26,11 @@
           "mode": "replace",
           "path": "assets/risley_export/settings.php",
           "overwrite": false
+        },
+        "[web-root]/modules/custom/{$name}/Sheets/Localization/Localization.xlsx": {
+          "mode": "replace",
+          "path": "assets/risley_export/Localization.xlsx",
+          "overwrite": false
         }
       },
       "installer-paths": {
