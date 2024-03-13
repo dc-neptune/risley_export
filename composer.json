@@ -3,7 +3,7 @@
   "description": "Exports drupalsettings into Excel files according to Risley format.",
   "type": "drupal-custom-module",
   "license": "GPL-2.0-or-later",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "require": {
     "composer/installers": "^2.2",
     "drupal/core": "^10",
@@ -23,11 +23,11 @@
   "extra": {
     "drupal-scaffold": {
       "file-mapping": {
-        "[web-root]/modules/custom/risley_export/src/Sheets/Settings/settings.php": {
+        "docroot/modules/custom/risley_export/src/Sheets/Settings/settings.php": {
           "mode": "replace",
           "overwrite": false
         },
-        "[web-root]/modules/custom/risley_export/src/Sheets/Localization/Localization.xlsx": {
+        "docroot/modules/custom/risley_export/src/Sheets/Localization/Localization.xlsx": {
           "mode": "replace",
           "overwrite": false
         }
