@@ -283,7 +283,6 @@ class FieldsSheet extends BaseSheet {
       return $date->format('Y-m-d\TH:i:sP');
     }
     elseif ($fieldType === 'boolean') {
-      var_dump($defaultValue);
       return $defaultValue[0]['value'] ? 'TRUE' : 'FALSE';
     }
     elseif (is_array($defaultValue) && count($defaultValue) === 1) {

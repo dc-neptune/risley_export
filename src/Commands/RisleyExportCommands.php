@@ -83,7 +83,6 @@ class RisleyExportCommands extends DrushCommands {
     if (!isset($options['path']) || !is_string($options['path']) ||
       (!is_string($options['file']) && $options['file'] !== NULL) ||
       !isset($options['filename']) || !is_string($options['filename'])) {
-      var_dump($options);
       throw new \InvalidArgumentException('Invalid options structure.');
     }
     $this->options = $options;
