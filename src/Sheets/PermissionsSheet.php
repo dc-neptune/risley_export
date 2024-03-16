@@ -124,6 +124,29 @@ class PermissionsSheet extends BaseSheet {
       $providerLabel = is_object($providerLabel) && method_exists($providerLabel, '__toString') ? $providerLabel->__toString() : $providerLabel;
       $providerLabel = $this->translate((string) $providerLabel);
       $configLabel = $this->getConfigLabel($permission);
+      $authenticatedHasPermission = in_array($key, $roles['authenticated']->get('permissions'));
+
+      if (
+        isset($this->settings['hideEmptyPermissions']) &&
+        $this->settings['hideEmptyPermissions'] === TRUE &&
+        !(
+          is_array($this->settings['whiteListPermissions']) &&
+          in_array($key, $this->settings['whiteListPermissions'])
+        )
+      ) {
+        $some = FALSE;
+        foreach ($roles as $roleName => $role) {
+          if ($roleName === 'administrator' || in_array($key, $role->get('permissions')) || ($role->id() !== 'anonymous' && $authenticatedHasPermission)) {
+            $some = TRUE;
+            break;
+          }
+        }
+        if (!$some) {
+          continue;
+        }
+        var_dump("Omitting empty permission '$key'\n");
+      }
+
       if ($configLabel === '') {
         $configLabel = isset($providersWithConfig[$provider]) ? "{$providerLabel}共通" : $providerLabel;
       }
@@ -136,8 +159,6 @@ class PermissionsSheet extends BaseSheet {
       $this->setCell($sheet, 'F', $row, $title);
 
       $column = 'G';
-
-      $authenticatedHasPermission = in_array($key, $roles['authenticated']->get('permissions'));
 
       foreach ($roles as $roleName => $role) {
         $isEnabled = $roleName === 'administrator' || in_array($key, $role->get('permissions')) || ($role->id() !== 'anonymous' && $authenticatedHasPermission);

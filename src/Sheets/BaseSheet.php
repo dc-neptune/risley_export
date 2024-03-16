@@ -66,7 +66,6 @@ class BaseSheet {
    *
    * @var array{
    *     path: string,
-   *     no-readonly: bool,
    *     file: string|null,
    *     filename: string
    *   }
@@ -183,6 +182,13 @@ class BaseSheet {
   protected $settings;
 
   /**
+   * A list of sites on the filesystem.
+   *
+   * @var array<string>
+   */
+  protected $sites;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -246,6 +252,7 @@ class BaseSheet {
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
     $this->settings = $settings;
+    $this->sites = $this->getAllSites();
   }
 
   /**
@@ -255,7 +262,6 @@ class BaseSheet {
     $this->spreadsheet = $spreadsheet;
     $this->sheet = $spreadsheet->createSheet();
     if (!isset($options['path']) || !is_string($options['path']) ||
-      !isset($options['no-readonly']) || !is_bool($options['no-readonly']) ||
       (!is_string($options['file']) && $options['file'] !== NULL) ||
       !isset($options['filename']) || !is_string($options['filename'])) {
       throw new \InvalidArgumentException('Invalid options structure.');
@@ -515,7 +521,7 @@ class BaseSheet {
    * Sets true or false display.
    */
   protected function buildCheck(mixed $bool, string $trueLabel = "", string $falseLabel = ""): string {
-    return $bool ? "●" . $trueLabel : "☓" . $falseLabel;
+    return $bool ? "○" . $trueLabel : "-" . $falseLabel;
   }
 
   /**
@@ -725,27 +731,47 @@ class BaseSheet {
    *
    * @param string $origin
    *   Filter the list by origin: 'all', 'core', 'contrib', or 'custom'.
+   * @param \Drupal\Core\Extension\Extension[]|array[]|null $modules
+   *   A list of extensions. If not set, get from this site.
+   *   If set, probably from other site.
    *
-   * @return \Drupal\Core\Extension\Extension[]
+   * @return \Drupal\Core\Extension\Extension[]|array[]
    *   An array of modules filtered by the specified origin.
    */
-  protected function getModules(string $origin = 'all'): array {
-    /** @var \Drupal\Core\Extension\Extension[] $modules */
-    $modules = $this->moduleExtensionList->getList();
-
+  protected function getModules(string $origin = 'all', array $modules = NULL): array {
+    if (!isset($modules)) {
+      $modules = $this->moduleExtensionList->getList();
+    }
     foreach ($modules as $key => $module) {
-      if (strpos($module->getPath(), 'tests')) {
-        continue;
+      if ($module instanceof Extension) {
+        if (strpos($module->getPath(), 'tests')) {
+          continue;
+        }
+
+        $moduleOrigin = property_exists($module, 'origin') ? $module->origin : '';
+
+        if ($origin !== 'all' && (
+            ($origin === 'core' && $moduleOrigin !== 'core') ||
+            ($origin === 'contrib' && ($moduleOrigin === 'core' || strpos($module->getPath(), 'contrib') === FALSE)) ||
+            ($origin === 'custom' && strpos($module->getPath(), 'custom') === FALSE)
+          )) {
+          unset($modules[$key]);
+        }
       }
+      else {
+        if (strpos($module['subpath'], 'tests')) {
+          continue;
+        }
 
-      $moduleOrigin = property_exists($module, 'origin') ? $module->origin : '';
+        $moduleOrigin = $module['origin'] ?? '';
 
-      if ($origin !== 'all' && (
-                ($origin === 'core' && $moduleOrigin !== 'core') ||
-                ($origin === 'contrib' && ($moduleOrigin === 'core' || strpos($module->getPath(), 'contrib') === FALSE)) ||
-                ($origin === 'custom' && strpos($module->getPath(), 'custom') === FALSE)
-            )) {
-        unset($modules[$key]);
+        if ($origin !== 'all' && (
+          ($origin === 'core' && $moduleOrigin !== 'core') ||
+          ($origin === 'contrib' && ($moduleOrigin === 'core' || strpos($module['subpath'], 'contrib') === FALSE)) ||
+          ($origin === 'custom' && strpos($module['subpath'], 'custom') === FALSE)
+        )) {
+          unset($modules[$key]);
+        }
       }
     }
 
@@ -817,8 +843,17 @@ class BaseSheet {
   /**
    * Gets the translated module description.
    */
-  protected function getModuleDescription(Extension $module):string {
-    $infoFilePath = $module->getPath() . '/' . $module->getName() . '.info.yml';
+  protected function getModuleDescription(Extension|array $module):string {
+    if (is_object($module) && method_exists($module, 'getPath')) {
+      $infoFilePath = $module->getPath() . '/' . $module->getName() . '.info.yml';
+    }
+    elseif (is_array($module) && isset($module['subpath'])) {
+      $infoFilePath = $module['subpath'] . '/' . $module['machine_name'] . '.info.yml';
+    }
+    else {
+      return '';
+    }
+
     if (file_exists($infoFilePath)) {
       $description = strip_tags($this->infoParser->parse($infoFilePath)['description'] ?: '');
       return $this->translate($description);
@@ -844,6 +879,189 @@ class BaseSheet {
       ],
     ];
     $this->sheet->getStyle($range)->applyFromArray($centerAlignmentStyle);
+  }
+
+  /**
+   * Gets all sites in the /site directory and returns an array.
+   *
+   * If includeCurrent is false, does not include the site running this command.
+   */
+  protected function getAllSites(bool $includeCurrent = TRUE):array {
+    $sitesDirectory = './sites';
+    $sites = [];
+
+    if (!is_dir($sitesDirectory)) {
+      return [];
+    }
+
+    // Get a list of directories within the 'sites' directory.
+    $directories = new \DirectoryIterator($sitesDirectory);
+
+    foreach ($directories as $dir) {
+      if ($dir->isDot()) {
+        continue;
+      }
+      if ($dir->isDir()) {
+        $siteDirectory = $sitesDirectory . '/' . $dir->getFilename();
+        if (file_exists($siteDirectory . '/settings.php') || file_exists($siteDirectory . '/services.yml')) {
+          $sites[] = $dir->getFilename();
+        }
+      }
+    }
+
+    if (isset($this->settings['ignoreSites']) && is_array($this->settings['ignoreSites'])) {
+      $sites = array_diff($sites, $this->settings['ignoreSites']);
+    }
+
+    return $sites;
+  }
+
+  /**
+   * Gets all modules from all sites.
+   *
+   * @param string $origin
+   *   Filter the list by origin: 'all', 'core', 'contrib', or 'custom'.
+   */
+  protected function getModulesAcrossSites($origin = 'all'):array|NULL {
+    $baseSheet = $this;
+    $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
+      $command = "drush @$site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
+      $jsonModules = shell_exec($command);
+
+      if (!is_string($jsonModules)) {
+        return $result;
+      }
+
+      $modules = json_decode($jsonModules, TRUE);
+
+      if (!is_array($modules)) {
+        return $result;
+      }
+
+      foreach ($modules as $machineName => &$module) {
+        if (!is_array($module)) {
+          return $result;
+        }
+        // Add machine name to array for future indexing.
+        $module['machine_name'] = $machineName;
+      }
+
+      $result[$site] = $baseSheet->getModules($origin, $modules);
+
+      return $result;
+    }, []);
+
+    return $sites;
+  }
+
+  /**
+   * Gets the status of the module across all sites found.
+   *
+   * @param \Drupal\Core\Extension\Extension|array $module
+   *   An extension if accessing site internally or an array
+   *   if accessing all sites through hacky drush command.
+   */
+  protected function getModuleStatus(Extension|array $module): string {
+    if ($module instanceof Extension) {
+      // Simply check for this site.
+      return $this->buildCheck($this->moduleHandler->moduleExists($module->getName()));
+    }
+    elseif (isset($this->modules)) {
+      $enabledSites = [];
+      $machineName = $module['machine_name'];
+      foreach ($this->modules as $site => $modules) {
+        if (isset($modules[$machineName]) && $modules[$machineName]['status'] > 0) {
+          $enabledSites[] = $site;
+        }
+      }
+
+      if (empty($enabledSites)) {
+        return $this->buildCheck(FALSE);
+      }
+      elseif (count($this->sites) === count($enabledSites)) {
+        return $this->buildCheck(TRUE);
+      }
+      else {
+        $string = array_map('strtoupper', $enabledSites);
+        $string = implode(', ', $string);
+        return $string;
+      }
+    }
+    else {
+      return 'ERR';
+    }
+  }
+
+  /**
+   * Gets the status of the module across all sites.
+   *
+   * Can return either circle, square, or a list of enabled sites.
+   *
+   * @todo This currently takes ~10 minutes to run lol
+   */
+  protected function getModuleAcrossSites(string $machineName):string {
+    $enabledSites = [];
+    foreach ($this->sites as $site) {
+      $command =
+            'drush @' . $site . ' ev "echo \Drupal::service(\'module_handler\')->moduleExists(\'' . $machineName . '\') ? \'true\' : \'false\';"';
+      $exists = trim(shell_exec($command) ?: '') === 'true';
+      if ($exists) {
+        $enabledSites[] = $site;
+      }
+    }
+    if (empty($enabledSites)) {
+      return $this->buildCheck(FALSE);
+    }
+    elseif (count($this->sites) === count($enabledSites)) {
+      return $this->buildCheck(TRUE);
+    }
+    else {
+      $string = array_map('strtoupper', $enabledSites);
+      $string = implode(', ', $string);
+      return $string;
+    }
+  }
+
+  /**
+   * Gets a master array of modules across all found sites.
+   */
+  protected function getAllModules():array {
+    if (!isset($this->modules) || !is_array($this->modules)) {
+      return [];
+    }
+
+    $masterArray = [];
+    foreach ($this->modules as $modules) {
+      foreach ($modules as $module) {
+        $machineName = $module['machine_name'];
+
+        if (!isset($masterArray[$machineName])) {
+          $masterArray[$machineName] = $module;
+        }
+      }
+    }
+
+    return $masterArray;
+  }
+
+  /**
+   * Gets the field type such as 'Number' or 'Boolean'.
+   */
+  protected function getFieldTypeLabel(FieldDefinitionInterface $fieldDefinition): string {
+    $fieldType = $fieldDefinition->getType();
+    $fieldSettings = $fieldDefinition->getSettings();
+    $label = is_array($_ = $this->fieldTypePluginManager->getDefinition($fieldType)) ? $_['label'] : '';
+
+    if ($fieldType === 'entity_reference' || $fieldType === 'entity_reference_revisions') {
+      $entityType = $fieldSettings['target_type'] ?: $fieldSettings['handler'];
+      $entityType = explode(':', $entityType);
+      $entityType = end($entityType);
+      $entityLabel = (string) $this->entityTypeManager->getDefinition($entityType)?->getLabel();
+
+      return "$label ($entityLabel)";
+    }
+
+    return is_array($_ = $this->fieldTypePluginManager->getDefinition($fieldType)) ? $_['label'] : '';
   }
 
 }

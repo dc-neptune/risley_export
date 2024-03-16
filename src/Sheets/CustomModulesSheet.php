@@ -2,6 +2,7 @@
 
 namespace Drupal\risley_export\Sheets;
 
+use Drupal\Core\Extension\Extension;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -11,10 +12,19 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class CustomModulesSheet extends BaseSheet {
 
   /**
+   * A list of custom modules across all sites.
+   *
+   * @var array|null
+   */
+  protected $modules;
+
+  /**
    * Initializes the sheet.
    */
   protected function initialize():void {
     $sheet = $this->sheet;
+    $this->modules = $this->getModulesAcrossSites('custom');
+
     $sheet->setTitle('カスタムモジュール | Custom modules');
     $headers = [
       "No.", "モジュール\nModule", "システム内部名称\nMachine Name", "ON/OFF", "備考\nRemarks",
@@ -47,13 +57,13 @@ class CustomModulesSheet extends BaseSheet {
    * Sets rows on the Version sheet.
    */
   protected function setRows(Worksheet $sheet, int $row): int {
-    $modules = $this->getModules('custom');
+    $modules = $this->getAllModules();
 
     foreach ($modules as $module) {
       $number = '=ROW()-1';
       $label = $module->info['name'] ?? '';
-      $machineName = $module->getName();
-      $status = $this->buildCheck($this->moduleHandler->moduleExists($machineName));
+      $machineName = $module instanceof Extension ? $module->getName() : $module['machine_name'];
+      $status = $this->getModuleStatus($module);
       $remark = $this->getModuleDescription($module);
 
       $this->setCell($sheet, 'A', $row, $number);

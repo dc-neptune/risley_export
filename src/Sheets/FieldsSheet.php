@@ -2,6 +2,9 @@
 
 namespace Drupal\risley_export\Sheets;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Field\FieldConfigInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -78,21 +81,23 @@ class FieldsSheet extends BaseSheet {
    */
   protected function setRows(Worksheet $sheet, array $fields, int $row, string $columnCValue, string $entityTypeId, string $bundle): int {
     foreach ($fields as $field_name => $field_definition) {
+      if (is_array($this->settings['blackListFields']) && in_array($field_name, $this->settings['blackListFields'])) {
+        var_dump("Omitting blacklisted field: $field_name");
+        continue;
+      }
 
       // Necessary to get default value.
       $fieldConfig = $this->entityTypeManager->getStorage('field_config')->load($entityTypeId . '.' . $bundle . '.' . $field_name);
       $entityType = $this->translate($this->entityTypeManager->getDefinition($entityTypeId)?->getLabel() ?? '');
-      $fieldType = $field_definition->getType();
-      $fieldTypeLabel = is_array($_ = $this->fieldTypePluginManager->getDefinition($fieldType)) ? $_['label'] : '';
+      $fieldTypeLabel = $this->getFieldTypeLabel($field_definition);
       $isRequired = $this->buildCheck($field_definition->isRequired());
       $translatable = $this->buildCheck($field_definition->isTranslatable());
       $cardinality = $field_definition->getFieldStorageDefinition()->getCardinality();
       $cardinality = $cardinality == -1 ? 'N' : $cardinality;
       $englishLabel = $field_definition->getLabel();
       $japaneseLabel = $this->translate($fieldConfig, '') ?: $this->translate($englishLabel, '');
-      $defaultValue = $fieldConfig ? $fieldConfig->get('default_value') : NULL;
-      $formattedDefaultValue = $this->formatDefaultValue($defaultValue);
-      $formattedSettings = $this->formatFieldSettings($fieldType, $field_definition->getSettings());
+      $defaultValue = $this->getDefaultFieldValue($fieldConfig, $field_definition);
+      $formattedSettings = $this->formatFieldSettings($field_definition);
 
       $this->setCell($sheet, 'A', $row, '=ROW()-1');
       $this->setCell($sheet, 'B', $row, $entityType, TRUE);
@@ -103,7 +108,7 @@ class FieldsSheet extends BaseSheet {
       $this->setCell($sheet, 'G', $row, $fieldTypeLabel);
       $this->setCell($sheet, 'H', $row, $isRequired);
       $this->setCell($sheet, 'I', $row, $cardinality);
-      $this->setCell($sheet, 'J', $row, $formattedDefaultValue);
+      $this->setCell($sheet, 'J', $row, $defaultValue);
       $this->setCell($sheet, 'K', $row, $translatable);
       $this->setCell($sheet, 'L', $row, $formattedSettings);
 
@@ -119,7 +124,7 @@ class FieldsSheet extends BaseSheet {
     $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
     $universalFields = $this->getUniversalFields($entities, $entityTypeId);
 
-    if (!$this->options['no-readonly']) {
+    if (!(isset($this->settings['hideReadOnly']) &&$this->settings['hideReadOnly'] === TRUE)) {
       $row = $this->setUniversalFields($sheet, $universalFields, 'コンテンツ共通項目 (Read Only)', $row, $entities, $entityTypeId);
     }
 
@@ -214,30 +219,12 @@ class FieldsSheet extends BaseSheet {
   }
 
   /**
-   * Formats the default value for display in the spreadsheet.
-   */
-  private function formatDefaultValue(mixed $defaultValue): mixed {
-    if (empty($defaultValue)) {
-      return '';
-    }
-
-    // Check if the default value is an array with a single key 'value'.
-    if (is_array($defaultValue) && count($defaultValue) === 1 && isset($defaultValue[0]['value'])) {
-      return (string) $defaultValue[0]['value'];
-    }
-
-    // If default value is an array, format it as a string.
-    if (is_array($defaultValue)) {
-      return json_encode($defaultValue) ?: '';
-    }
-
-    return $defaultValue;
-  }
-
-  /**
    * Formats the field settings for display based on the field type.
    */
-  private function formatFieldSettings(string $fieldType, array $settings): string {
+  private function formatFieldSettings(FieldDefinitionInterface $fieldDefinition): string {
+    $fieldType = $fieldDefinition->getType();
+    $settings = $fieldDefinition->getSettings();
+
     // Custom formatting based on field type.
     switch ($fieldType) {
       case 'entity_reference_revisions':
@@ -271,6 +258,40 @@ class FieldsSheet extends BaseSheet {
       $formattedSettings[] = "$key: $value";
     }
     return implode("\n", $formattedSettings);
+  }
+
+  /**
+   * Gets the default value for a field config.
+   */
+  private function getDefaultFieldValue(FieldConfigInterface|NULL $fieldConfig, FieldDefinitionInterface $fieldDefinition):string {
+    if (!isset($fieldConfig)) {
+      return '';
+    }
+
+    $defaultValue = $fieldConfig->get('default_value');
+    $fieldType = $fieldDefinition->getType();
+
+    if (
+      empty($defaultValue) ||
+      !is_array($defaultValue) ||
+      !is_array($defaultValue[0])
+    ) {
+      return '';
+    }
+    elseif ($fieldType === 'timestamp') {
+      $date = DrupalDateTime::createFromTimestamp($defaultValue[0]['value']);
+      return $date->format('Y-m-d\TH:i:sP');
+    }
+    elseif ($fieldType === 'boolean') {
+      var_dump($defaultValue);
+      return $defaultValue[0]['value'] ? 'TRUE' : 'FALSE';
+    }
+    elseif (is_array($defaultValue) && count($defaultValue) === 1) {
+      return (string) $defaultValue[0]['value'] ?: '';
+    }
+    elseif (is_array($defaultValue)) {
+      return json_encode($defaultValue) ?: '';
+    }
   }
 
 }

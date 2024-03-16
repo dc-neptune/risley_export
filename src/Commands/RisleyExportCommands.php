@@ -39,7 +39,6 @@ class RisleyExportCommands extends DrushCommands {
    *
    * @var array{
    *    path: string,
-   *    no-readonly: bool,
    *    file: string|null,
    *    filename: string
    *  }
@@ -74,19 +73,14 @@ class RisleyExportCommands extends DrushCommands {
    * @option path
    *   The directory path where the Excel file will be saved.
    *   Defaults to '../dev'.
-   * @option no-readonly
-   *   If set, readonly fields will not be included. Defaults to false.
    *
    * @command risley_export:export
    * @aliases re:e
    * @usage risley_export:export --path=/path/to/directory/from/docroot
    *   Exports content types and fields to the specified directory.
-   * @usage risley_export:export --no-readonly
-   *   Exports content types and fields excluding readonly fields.
    */
-  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'no-readonly' => FALSE, 'file' => NULL, 'filename' => 'file.xlsx']): void {
+  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'file' => NULL, 'filename' => 'file.xlsx']): void {
     if (!isset($options['path']) || !is_string($options['path']) ||
-      !isset($options['no-readonly']) || !is_bool($options['no-readonly']) ||
       (!is_string($options['file']) && $options['file'] !== NULL) ||
       !isset($options['filename']) || !is_string($options['filename'])) {
       var_dump($options);
