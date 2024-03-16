@@ -5,9 +5,6 @@
   "license": "GPL-2.0-or-later",
   "version": "0.4.8",
   "scripts": {
-    "post-drupal-scaffold-cmd": [
-      "php copy_private_file.php",
-    ]
   },
   "require": {
     "composer/installers": "^2.2",
