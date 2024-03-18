@@ -2,6 +2,7 @@
 
 namespace Drupal\risley_export\Sheets;
 
+use Consolidation\SiteAlias\SiteAliasManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -189,6 +190,13 @@ class BaseSheet {
   protected $sites;
 
   /**
+   * The site alias manager.
+   *
+   * @var \Consolidation\SiteAlias\SiteAliasManager
+   */
+  protected $siteAliasManager;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -219,22 +227,25 @@ class BaseSheet {
    *   The module handler interface.
    * @param array $settings
    *   The settings.
+   * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
+   *   The site alias manager.
    */
   public function __construct(
-        EntityFieldManagerInterface $entity_field_manager,
-        EntityTypeManagerInterface $entity_type_manager,
-        FieldTypePluginManagerInterface $field_type_plugin_manager,
-        LanguageManagerInterface $language_manager,
-        ConfigFactoryInterface $config_factory,
-        EntityTypeBundleInfoInterface $entity_type_bundle_info,
-        EntityRepositoryInterface $entity_repository,
-        ModuleExtensionList $module_extension_list,
-        PermissionHandlerInterface $user_permissions,
-        LoggerInterface $logger,
-        array $localization,
-        InfoParserInterface $info_parser,
-        ModuleHandlerInterface $module_handler,
-        array $settings
+    EntityFieldManagerInterface $entity_field_manager,
+    EntityTypeManagerInterface $entity_type_manager,
+    FieldTypePluginManagerInterface $field_type_plugin_manager,
+    LanguageManagerInterface $language_manager,
+    ConfigFactoryInterface $config_factory,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    EntityRepositoryInterface $entity_repository,
+    ModuleExtensionList $module_extension_list,
+    PermissionHandlerInterface $user_permissions,
+    LoggerInterface $logger,
+    array $localization,
+    InfoParserInterface $info_parser,
+    ModuleHandlerInterface $module_handler,
+    array $settings,
+    SiteAliasManager $site_alias_manager
     ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -252,6 +263,7 @@ class BaseSheet {
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
     $this->settings = $settings;
+    $this->siteAliasManager = $site_alias_manager;
     $this->sites = $this->getAllSites();
   }
 
@@ -887,33 +899,7 @@ class BaseSheet {
    * If includeCurrent is false, does not include the site running this command.
    */
   protected function getAllSites(bool $includeCurrent = TRUE):array {
-    $sitesDirectory = './sites';
-    $sites = [];
-
-    if (!is_dir($sitesDirectory)) {
-      return [];
-    }
-
-    // Get a list of directories within the 'sites' directory.
-    $directories = new \DirectoryIterator($sitesDirectory);
-
-    foreach ($directories as $dir) {
-      if ($dir->isDot()) {
-        continue;
-      }
-      if ($dir->isDir()) {
-        $siteDirectory = $sitesDirectory . '/' . $dir->getFilename();
-        if (file_exists($siteDirectory . '/settings.php') || file_exists($siteDirectory . '/services.yml')) {
-          $sites[] = $dir->getFilename();
-        }
-      }
-    }
-
-    if (isset($this->settings['ignoreSites']) && is_array($this->settings['ignoreSites'])) {
-      $sites = array_diff($sites, $this->settings['ignoreSites']);
-    }
-
-    return $sites;
+    return array_keys($this->siteAliasManager->getMultiple() ?: []);
   }
 
   /**
@@ -925,7 +911,7 @@ class BaseSheet {
   protected function getModulesAcrossSites($origin = 'all'):array|NULL {
     $baseSheet = $this;
     $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
-      $command = "drush @$site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
+      $command = "drush $site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
       $jsonModules = shell_exec($command);
 
       if (!is_string($jsonModules)) {
@@ -982,7 +968,12 @@ class BaseSheet {
         return $this->buildCheck(TRUE);
       }
       else {
-        $string = array_map('strtoupper', $enabledSites);
+        $string = array_map(function ($site) {
+          $siteWithoutAt = str_replace('@', '', $site);
+          $parts = explode('.', $siteWithoutAt);
+          $firstPart = $parts[0];
+          return strtoupper($firstPart);
+        }, $enabledSites);
         $string = implode(', ', $string);
         return $string;
       }

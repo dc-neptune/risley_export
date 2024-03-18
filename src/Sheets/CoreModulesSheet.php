@@ -60,7 +60,7 @@ class CoreModulesSheet extends BaseSheet {
 
     foreach ($modules as $module) {
       $number = '=ROW()-1';
-      $label = $module->info['name'] ?? '';
+      $label = $module->info['name'] ?? $module['info']['name'] ?? '';
       $machineName = $module instanceof Extension ? $module->getName() : $module['machine_name'];
       $status = $this->getModuleStatus($module);
       $remark = $this->getModuleDescription($module);

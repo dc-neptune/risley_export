@@ -7,6 +7,7 @@
 
 use Drupal\risley_export\Commands\RisleyExportCommands;
 use Drupal\risley_export\Sheets\Factory\BaseSheetFactory;
+use Drush\Drush;
 
 require_once 'autoload.php';
 require_once DRUPAL_ROOT . '/modules/custom/risley_export/src/Commands/RisleyExportCommands.php';
@@ -25,7 +26,8 @@ $baseSheetFactory = new BaseSheetFactory(
   \Drupal::service('user.permissions'),
   \Drupal::service('logger.factory'),
   \Drupal::service('info_parser'),
-  \Drupal::service('module_handler')
+  \Drupal::service('module_handler'),
+  Drush::service('site.alias.manager')
 );
 
 try {

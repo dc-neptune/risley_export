@@ -2,6 +2,7 @@
 
 namespace Drupal\risley_export\Sheets\Factory;
 
+use Consolidation\SiteAlias\SiteAliasManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -135,6 +136,13 @@ class BaseSheetFactory {
   protected $settings;
 
   /**
+   * The site alias manager.
+   *
+   * @var \Consolidation\SiteAlias\SiteAliasManager
+   */
+  protected $siteAliasManager;
+
+  /**
    * Constructs a new BaseSheetFactory object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -161,6 +169,8 @@ class BaseSheetFactory {
    *   The Info Parser service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler interface.
+   * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
+   *   The site alias manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -174,7 +184,8 @@ class BaseSheetFactory {
     PermissionHandlerInterface $user_permissions,
     LoggerChannelFactoryInterface $logger_factory,
     InfoParserInterface $info_parser,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
+    SiteAliasManager $site_alias_manager
   ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -190,6 +201,7 @@ class BaseSheetFactory {
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
     $this->settings = $this->buildSettings();
+    $this->siteAliasManager = $site_alias_manager;
   }
 
   /**
@@ -217,7 +229,8 @@ class BaseSheetFactory {
       $this->localization,
       $this->infoParser,
       $this->moduleHandler,
-      $this->settings
+      $this->settings,
+      $this->siteAliasManager
     );
     $customSheet->setSpreadsheet($spreadsheet, $options);
     return $customSheet->sheet;
