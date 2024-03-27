@@ -100,6 +100,9 @@ class RisleyExportCommands extends DrushCommands {
     if (!$this->options['file'] || $this->options['file'] === 'content') {
       $this->buildSpreadsheet('drupalsettings_content', ['Version', 'Menus', 'TaxonomiesForContent', 'ContentForContent', 'Redirects']);
     }
+    if (!$this->options['file'] || $this->options['file'] === 'webforms') {
+      $this->buildSpreadsheet('drupalsettings_webforms', ['Version', 'WebformsContent', 'WebformsOptions', 'WebformsPermissions']);
+    }
 
   }
 

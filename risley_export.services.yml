@@ -15,6 +15,7 @@ services:
       - '@info_parser'
       - '@module_handler'
       - '@site.alias_manager'
+      - '@path_alias.manager'
   risley_export.commands:
     class: \Drupal\risley_export\Commands\RisleyExportCommands
     arguments:

@@ -19,7 +19,9 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\node\Entity\NodeType;
+use Drupal\path_alias\AliasManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
+use Drupal\webform\Entity\Webform;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -197,6 +199,13 @@ class BaseSheet {
   protected $siteAliasManager;
 
   /**
+   * The path alias manager.
+   *
+   * @var \Drupal\path_alias\AliasManagerInterface
+   */
+  protected $pathAliasManager;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -229,6 +238,8 @@ class BaseSheet {
    *   The settings.
    * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
    *   The site alias manager.
+   * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
+   *   The path alias manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -245,7 +256,8 @@ class BaseSheet {
     InfoParserInterface $info_parser,
     ModuleHandlerInterface $module_handler,
     array $settings,
-    SiteAliasManager $site_alias_manager
+    SiteAliasManager $site_alias_manager,
+    AliasManagerInterface $path_alias_manager
     ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -264,6 +276,7 @@ class BaseSheet {
     $this->moduleHandler = $module_handler;
     $this->settings = $settings;
     $this->siteAliasManager = $site_alias_manager;
+    $this->pathAliasManager = $path_alias_manager;
     $this->sites = $this->getAllSites();
   }
 
@@ -911,7 +924,7 @@ class BaseSheet {
   protected function getModulesAcrossSites($origin = 'all'):array|NULL {
     $baseSheet = $this;
     $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
-      $command = "drush $site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
+      $command = "/opt/drupal/vendor/bin/drush $site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
       $jsonModules = shell_exec($command);
 
       if (!is_string($jsonModules)) {
@@ -984,32 +997,45 @@ class BaseSheet {
   }
 
   /**
-   * Gets the status of the module across all sites.
+   * Gets the status of the webform across all sites found.
    *
-   * Can return either circle, square, or a list of enabled sites.
-   *
-   * @todo This currently takes ~10 minutes to run lol
+   * @param \Drupal\webform\Entity\Webform|array $webform
+   *   A webform if accessing site internally or an array
+   *   if accessing all sites through hacky drush command.
    */
-  protected function getModuleAcrossSites(string $machineName):string {
-    $enabledSites = [];
-    foreach ($this->sites as $site) {
-      $command =
-            'drush @' . $site . ' ev "echo \Drupal::service(\'module_handler\')->moduleExists(\'' . $machineName . '\') ? \'true\' : \'false\';"';
-      $exists = trim(shell_exec($command) ?: '') === 'true';
-      if ($exists) {
-        $enabledSites[] = $site;
+  protected function getWebformStatus(Webform|array $webform): string {
+    if ($webform instanceof Webform) {
+      // Simply check for this site.
+      return $this->buildCheck($webform->isOpen());
+    }
+    elseif (isset($this->webforms)) {
+      $enabledSites = [];
+      $machineName = $webform['machine_name'];
+      foreach ($this->webforms as $site => $webforms) {
+        if (isset($webforms[$machineName]) && $webforms[$machineName]['status'] === 'open') {
+          $enabledSites[] = $site;
+        }
+      }
+
+      if (empty($enabledSites)) {
+        return $this->buildCheck(FALSE);
+      }
+      elseif (count($this->sites) === count($enabledSites)) {
+        return $this->buildCheck(TRUE);
+      }
+      else {
+        $string = array_map(function ($site) {
+          $siteWithoutAt = str_replace('@', '', $site);
+          $parts = explode('.', $siteWithoutAt);
+          $firstPart = $parts[0];
+          return strtoupper($firstPart);
+        }, $enabledSites);
+        $string = implode(', ', $string);
+        return $string;
       }
     }
-    if (empty($enabledSites)) {
-      return $this->buildCheck(FALSE);
-    }
-    elseif (count($this->sites) === count($enabledSites)) {
-      return $this->buildCheck(TRUE);
-    }
     else {
-      $string = array_map('strtoupper', $enabledSites);
-      $string = implode(', ', $string);
-      return $string;
+      return 'ERR';
     }
   }
 
@@ -1036,6 +1062,28 @@ class BaseSheet {
   }
 
   /**
+   * Gets a master array of webforms across all found sites.
+   */
+  protected function getAllWebforms():array {
+    if (!isset($this->webforms) || !is_array($this->webforms)) {
+      return [];
+    }
+
+    $masterArray = [];
+    foreach ($this->webforms as $webforms) {
+      foreach ($webforms as $webform) {
+        $machineName = $webform['machine_name'];
+
+        if (!isset($masterArray[$machineName])) {
+          $masterArray[$machineName] = $webform;
+        }
+      }
+    }
+
+    return $masterArray;
+  }
+
+  /**
    * Gets the field type such as 'Number' or 'Boolean'.
    */
   protected function getFieldTypeLabel(FieldDefinitionInterface $fieldDefinition): string {
@@ -1053,6 +1101,52 @@ class BaseSheet {
     }
 
     return is_array($_ = $this->fieldTypePluginManager->getDefinition($fieldType)) ? $_['label'] : '';
+  }
+
+  /**
+   * Gets all webforms from all sites.
+   */
+  protected function getWebformsAcrossSites():array|NULL {
+    $sites = array_reduce($this->sites, function ($result, $site) {
+      // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
+      $command = <<<EOT
+      /opt/drupal/vendor/bin/drush $site ev '
+      \$webforms = \\Drupal::service("entity_type.manager")->getStorage("webform")->loadMultiple();
+      \$webformsArray = array_map(function(\$webform) {
+          \$array = \$webform->toArray();
+          \$array["_url_alias"] = \\Drupal::service("path_alias.manager")->getAliasByPath("/webform/" . \$webform->id());
+          return \$array;
+      }, \$webforms);
+      echo json_encode(\$webformsArray);
+      '
+      EOT;
+
+      $jsonWebforms = shell_exec($command);
+
+      if (!is_string($jsonWebforms)) {
+        return $result;
+      }
+
+      $webforms = json_decode($jsonWebforms, TRUE);
+
+      if (!is_array($webforms)) {
+        return $result;
+      }
+
+      foreach ($webforms as $machineName => &$webform) {
+        if (!is_array($webform)) {
+          return $result;
+        }
+        // Add machine name to array for future indexing.
+        $webform['machine_name'] = $machineName;
+      }
+
+      $result[$site] = $webforms;
+
+      return $result;
+    }, []);
+
+    return $sites;
   }
 
 }

@@ -27,7 +27,8 @@ $baseSheetFactory = new BaseSheetFactory(
   \Drupal::service('logger.factory'),
   \Drupal::service('info_parser'),
   \Drupal::service('module_handler'),
-  Drush::service('site.alias.manager')
+  Drush::service('site.alias.manager'),
+  \Drupal::service('path_alias.manager'),
 );
 
 try {

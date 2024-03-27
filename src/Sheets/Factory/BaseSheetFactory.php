@@ -14,6 +14,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\path_alias\AliasManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -143,6 +144,13 @@ class BaseSheetFactory {
   protected $siteAliasManager;
 
   /**
+   * The path alias manager.
+   *
+   * @var \Drupal\path_alias\AliasManagerInterface
+   */
+  protected $pathAliasManager;
+
+  /**
    * Constructs a new BaseSheetFactory object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -171,6 +179,8 @@ class BaseSheetFactory {
    *   The module handler interface.
    * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
    *   The site alias manager.
+   * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
+   *   The path alias manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -185,7 +195,8 @@ class BaseSheetFactory {
     LoggerChannelFactoryInterface $logger_factory,
     InfoParserInterface $info_parser,
     ModuleHandlerInterface $module_handler,
-    SiteAliasManager $site_alias_manager
+    SiteAliasManager $site_alias_manager,
+    AliasManagerInterface $path_alias_manager
   ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -202,6 +213,7 @@ class BaseSheetFactory {
     $this->moduleHandler = $module_handler;
     $this->settings = $this->buildSettings();
     $this->siteAliasManager = $site_alias_manager;
+    $this->pathAliasManager = $path_alias_manager;
   }
 
   /**
@@ -230,7 +242,8 @@ class BaseSheetFactory {
       $this->infoParser,
       $this->moduleHandler,
       $this->settings,
-      $this->siteAliasManager
+      $this->siteAliasManager,
+      $this->pathAliasManager
     );
     $customSheet->setSpreadsheet($spreadsheet, $options);
     return $customSheet->sheet;
