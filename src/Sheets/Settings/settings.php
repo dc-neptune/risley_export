@@ -52,3 +52,8 @@ $settings['blackListFields'] = [];
  * deal with multiple content types and checks.
  */
 $settings['weightedFields'] = TRUE;
+
+/*
+ * If set to true, add a localization file to Localization.
+ */
+$settings['localization'] = FALSE;

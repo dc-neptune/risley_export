@@ -824,7 +824,7 @@ class BaseSheet {
    * Translates the string first from db and then from module.
    */
   protected function translate(EntityInterface|string|NULL $mixed, string|NULL $default = NULL): string {
-    if (!$mixed) {
+    if (!$mixed || (isset($this->settings['localization']) && !$this->settings['localization'])) {
       return $default ?? '';
     }
     elseif ($mixed instanceof EntityInterface) {
