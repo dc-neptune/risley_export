@@ -1007,7 +1007,10 @@ class BaseSheet {
     $baseSheet = $this;
     $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
       $uri = $this->siteAliasManager->get($site)->uri();
-      $command = "/opt/drupal/vendor/bin/drush -l=$uri ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
+      if (empty($uri)) {
+        return [];
+      }
+      $command = "/opt/drupal/vendor/bin/drush --uri=\"$uri\" ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
       $jsonModules = shell_exec($command);
 
       if (!is_string($jsonModules)) {
@@ -1192,22 +1195,24 @@ class BaseSheet {
   protected function getWebformsAcrossSites():array|NULL {
     $sites = array_reduce($this->sites, function ($result, $site) {
       // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
-      var_dump($site);
       $uri = $this->siteAliasManager->get($site)->uri();
-      $command = <<<EOT
-      /opt/drupal/vendor/bin/drush -l=$uri ev '
-      if(!\\Drupal::service("entity_type.manager")->hasDefinition("webform")) return [];
-      \$webforms = \\Drupal::service("entity_type.manager")->getStorage("webform")->loadMultiple();
-      \$webformsArray = array_map(function(\$webform) {
-          \$array = \$webform->toArray();
-          \$array["_url_alias"] = \\Drupal::service("path_alias.manager")->getAliasByPath("/webform/" . \$webform->id());
-          return \$array;
-      }, \$webforms);
-      echo json_encode(\$webformsArray);
-      '
-      EOT;
+      if (empty($uri)) {
+        return [];
+      }
+        $command = <<<EOT
+          /opt/drupal/vendor/bin/drush --uri="$uri" ev '
+          if(!\\Drupal::service("entity_type.manager")->hasDefinition("webform")) return [];
+          \$webforms = \\Drupal::service("entity_type.manager")->getStorage("webform")->loadMultiple();
+          \$webformsArray = array_map(function(\$webform) {
+              \$array = \$webform->toArray();
+              \$array["_url_alias"] = \\Drupal::service("path_alias.manager")->getAliasByPath("/webform/" . \$webform->id());
+              return \$array;
+          }, \$webforms);
+          echo json_encode(\$webformsArray);
+          '
+          EOT;
 
-      $jsonWebforms = shell_exec($command);
+        $jsonWebforms = shell_exec($command);
 
       if (!is_string($jsonWebforms)) {
         return $result;
@@ -1228,6 +1233,7 @@ class BaseSheet {
       }
 
       $result[$site] = $webforms;
+      var_dump($site, count($webforms));
 
       return $result;
     }, []);
