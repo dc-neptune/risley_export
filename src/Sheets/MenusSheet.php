@@ -18,49 +18,51 @@ class MenusSheet extends BaseSheet {
     // Run this stupid thing twice b/c too lazy to refactor setRows()
     $maxDepth = $this->findMaxDepth();
     $customFieldLabels = $this->getCustomMenuLinkFields('label');
-    $headers = array_merge(
-      ["No.", "メニュー\nMenu"],
-      array_fill(0, $maxDepth + 1, "メニュー項目\nMenu Item"),
+
+    $settings = array_merge(
+      [5, 40],
+      array_fill(0, $maxDepth + 1, 30),
+      [60, 15],
+      array_fill(0, count($customFieldLabels), 15),
+      [15, 60]
+    );
+    $japaneseHeaders = array_merge(
+      ["番号", "メニュー"],
+      array_fill(0, $maxDepth + 1, "メニュー項目"),
+      ["ユーアーエル", "拡張表示"],
+      $customFieldLabels,
+      ["サイトマップ反映", "備考"]
+    );
+    $englishHeaders = array_merge(
+      ["No.", "Menu"],
+      array_fill(0, $maxDepth + 1, "Menu Item"),
       ["URL", "Show As Expanded"],
       $customFieldLabels,
-      ["Site Map反映", "備考\nRemarks"]
+      ["Show on Site Map", "Remarks"]
     );
-    $sheet->fromArray($headers, NULL, 'A1');
+
+    $row = $this->setHeaders([
+      $settings,
+      $japaneseHeaders,
+      $englishHeaders,
+    ]);
 
     // Loop through headers to merge each across rows 1 and 2.
     $j = 1;
-    for ($i = 0; $i < count($headers); $i++) {
-      if ($headers[$i] === "メニュー項目\nMenu Item") {
+    for ($i = 0; $i < count($englishHeaders); $i++) {
+      if ($englishHeaders[$i] === "Menu Item") {
         $this->setCell($sheet, $this->intToCol($i), 2, "第" . $j++ . "階層");
-      }
-      else {
-        $colLetter = $this->intToCol($i);
-        $mergeRange = "{$colLetter}1:{$colLetter}2";
-        $sheet->mergeCells($mergeRange);
       }
     }
 
     // Merge Menu items.
     $sheet->mergeCells("C1:" . $this->intToCol(2 + $maxDepth) . "1");
 
-    $row = 3;
-
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet, "A1:" . $sheet->getHighestDataColumn(1) . "2");
+    $this->setStyle($sheet);
 
     $this->setBorders();
-
-    $headers = array_merge(
-      [5, 40],
-      array_fill(0, $maxDepth + 1, 30),
-      [60, 12],
-      array_fill(0, count($customFieldLabels), 12),
-      [12, 60]
-    );
-    foreach ($headers as $i => $value) {
-      $sheet->getColumnDimension($this->intToCol($i))->setWidth($value);
-    }
 
     $this->setStyleCenter($this->intToCol(3 + $maxDepth + 1) . ":" . $this->incrementColumn($sheet->getHighestDataColumn(1), -1));
   }

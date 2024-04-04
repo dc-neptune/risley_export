@@ -17,25 +17,20 @@ class TaxonomiesSheet extends BaseSheet {
     $sheet = $this->sheet;
     $sheet->setTitle('タクソノミー | Taxonomies');
 
-    $sheet->fromArray([
-      "No.", "Vocabulary", "システム内部名称\Machine Name", "説明\nDescription", "翻訳可\nMultilingual", "XMLサイトマップ\nXMLSiteMap", "ページ表示\nRabbit Hole", "言語設定\nLanguage Settings", "Remarks",
-    ], NULL, 'A1');
-    $row = 2;
+    $row = $this->setHeaders([
+      [5, 30, 30, 35, 12, 15, 15, 30, 30],
+      [
+        "番号", "ターム", "システム内部名称", "説明", "翻訳可", "XMLサイトマップ", "ページ表示", "言語設定", "備考",
+      ],
+      [
+        "No.", "Vocabulary", "Machine Name", "Description", "Multilingual", "XMLSiteMap", "Rabbit Hole", "Language Settings", "Remarks",
+      ],
+    ]);
 
     $row = $this->setEntities($sheet, $row);
 
     $this->setStyle($sheet);
     $this->setBorders();
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(30);
-    $sheet->getColumnDimension('C')->setWidth(30);
-    $sheet->getColumnDimension('D')->setWidth(35);
-    $sheet->getColumnDimension('E')->setWidth(12);
-    $sheet->getColumnDimension('F')->setWidth(13);
-    $sheet->getColumnDimension('G')->setWidth(15);
-    $sheet->getColumnDimension('H')->setWidth(30);
-    $sheet->getColumnDimension('I')->setWidth(30);
 
     $centerAlignmentStyle = [
       'alignment' => [

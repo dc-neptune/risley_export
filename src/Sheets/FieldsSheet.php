@@ -5,7 +5,6 @@ namespace Drupal\risley_export\Sheets;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -24,7 +23,17 @@ class FieldsSheet extends BaseSheet {
       "システム内部名称\nMachine Name\n(26文字以内)", "フィールドタイプ\nField Type", "必須\nRequired", "個数\nNumber", "初期値\nDefault Value", "翻訳可\nMultilingual", "とりうる値/制限\nField Settings", "備考\nRemarks",
     ];
     $sheet->fromArray($headers, NULL, 'A1');
-    $row = 2;
+    $row = $this->setHeaders([
+      [5, 12, 15, 20, 27, 31, 33.5, 8, 7, 21, 10, 46],
+      [
+        "番号", "分類", "コンテンツタイプ", "項目名（日本語）", "項目名（英語）",
+        "システム内部名称\n（26文字以内）", "フィールドタイプ", "必須", "個数", "初期値", "翻訳可", "とりうる値/制限", "備考",
+      ],
+      [
+        "No.", "Type", "Content Type", "Field Name (Japanese)", "Field Name (English)",
+        "Machine Name\n(under 27 characters)", "Field Type", "Required", "Number", "Default Value", "Multilingual", "Field Settings", "Remarks",
+      ],
+    ]);
 
     // Content types.
     $row = $this->setEntities($sheet, $row, 'node_type', 'node');
@@ -39,39 +48,13 @@ class FieldsSheet extends BaseSheet {
     $row = $this->setEntities($sheet, $row, 'paragraphs_type', 'paragraph');
 
     // User.
-    $row = $this->setEntities($sheet, $row, 'user_role', 'user');
+    $this->setEntities($sheet, $row, 'user_role', 'user');
 
-    // Entity.
-    // Custom table.
-    // Format sheet.
     $sheet->getRowDimension(1)->setRowHeight(48);
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(12);
-    $sheet->getColumnDimension('C')->setWidth(14);
-    $sheet->getColumnDimension('D')->setWidth(20);
-    $sheet->getColumnDimension('E')->setWidth(27);
-    $sheet->getColumnDimension('F')->setWidth(31);
-    $sheet->getColumnDimension('G')->setWidth(33.5);
-    $sheet->getColumnDimension('H')->setWidth(5.5);
-    $sheet->getColumnDimension('I')->setWidth(4.5);
-    $sheet->getColumnDimension('J')->setWidth(21);
-    $sheet->getColumnDimension('K')->setWidth(8.5);
-    $sheet->getColumnDimension('L')->setWidth(46);
 
     $this->setStyle($sheet);
 
-    $centerAlignmentStyle = [
-      'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-      ],
-    ];
-    $sheet->getStyle('G:G')->applyFromArray($centerAlignmentStyle);
-    $sheet->getStyle('H:H')->applyFromArray($centerAlignmentStyle);
-    $sheet->getStyle('I:I')->applyFromArray($centerAlignmentStyle);
-    $sheet->getStyle('K:K')->applyFromArray($centerAlignmentStyle);
-    $sheet->getStyle('J:J')->applyFromArray($centerAlignmentStyle);
+    $this->setStyleCenter('G:K');
 
     $this->setBorders();
   }
@@ -82,7 +65,7 @@ class FieldsSheet extends BaseSheet {
   protected function setRows(Worksheet $sheet, array $fields, int $row, string $columnCValue, string $entityTypeId, string $bundle): int {
     foreach ($fields as $field_name => $field_definition) {
       if (is_array($this->settings['blackListFields']) && in_array($field_name, $this->settings['blackListFields'])) {
-        var_dump("Omitting blacklisted field: $field_name");
+        $this->logger->notice(dt("Omitting blacklisted field '!field_name'", ['!field_name' => $field_name]));
         continue;
       }
 

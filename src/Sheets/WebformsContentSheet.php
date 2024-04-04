@@ -31,55 +31,64 @@ class WebformsContentSheet extends BaseSheet {
     $this->webforms = $this->getWebformsAcrossSites();
     $this->webformNodes = $this->getNodesWithWebform();
     $sheet->setTitle('ウェブフォーム | Content');
-    $sheet->fromArray([
-      "No.", "Webform", "", "", "", "Multisite", "標準機能設定", "", "", "", "", "",
-    ], NULL, 'A1');
-    $sheet->fromArray([
-      "",
-      "Name",
-      "Title",
-      "システム内部名称\nMachine name",
-      "説明\nAdministrative description",
-      "適用サイト\nApply site",
-      "Category",
-      "URL alias",
-      "Warn users about unsaved changes",
-      "Disable client-side validation",
-      "Enable preview page ",
-      "Form method",
-    ], NULL, 'A2');
+    $row = $this->setHeaders([
+      [
+        5,
+        30,
+        30,
+        30,
+        60,
+        12,
+        15,
+        60,
+        15,
+        15,
+        15,
+        15,
+      ],
+      ["番号", "Webform", "", "", "", "Multisite", "標準機能設定 Basic Settings", "", "", "", "", ""],
+      ["番号",
+        "ラベル",
+        "タイトル",
+        "システム内部名称",
+        "説明",
+        "適用サイト",
+        "カテゴリ",
+        "URLエイリアス",
+        "Warn users about unsaved changes",
+        "Disable client-side validation",
+        "Enable preview page ",
+        "Form method",
+      ],
+      ["No.",
+        "Name",
+        "Title",
+        "Machine name",
+        "Administrative description",
+        "Apply site",
+        "Category",
+        "URL alias",
+        "",
+        "",
+        "",
+        "",
+      ],
+    ]);
 
-    $row = 3;
-
-    $sheet->mergeCells('A1:A2');
-    $sheet->mergeCells('B1:E1');
-    $sheet->mergeCells('G1:L1');
+    foreach (['A1:A2', 'B1:E1', 'G1:L1', 'I2:I3', 'J2:J3', 'K2:K3', 'L2:L3'] as $range) {
+      $sheet->mergeCells($range);
+    }
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet, 'A1:' . $sheet->getHighestColumn() . '2');
+    $this->setStyle($sheet);
 
-    $this->setStyleCenter('I:L');
-    $this->setStyleCenter('F:F');
+    foreach (['I:L', 'F:F'] as $range) {
+      $this->setStyleCenter($range);
+    }
 
     $this->setBorders();
 
-    foreach ([
-      5,
-      30,
-      30,
-      30,
-      60,
-      8,
-      15,
-      60,
-      15,
-      15,
-      15,
-      15,
-    ] as $i => $width) {
-      $sheet->getColumnDimension($this->intToCol($i))->setWidth($width);
-    }
   }
 
   /**

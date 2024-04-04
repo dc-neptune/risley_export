@@ -3,7 +3,6 @@
 namespace Drupal\risley_export\Sheets;
 
 use Drupal\Core\Extension\Extension;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -26,31 +25,24 @@ class CustomModulesSheet extends BaseSheet {
     $this->modules = $this->getModulesAcrossSites('custom');
 
     $sheet->setTitle('カスタムモジュール | Custom modules');
-    $headers = [
-      "No.", "モジュール\nModule", "システム内部名称\nMachine Name", "ON/OFF", "備考\nRemarks",
-    ];
-    $sheet->fromArray($headers, NULL, 'A1');
-    $row = 2;
+
+    $row = $this->setHeaders([
+      [5, 30, 30, 10, 46],
+      [
+        "番号", "モジュール", "システム内部名称", "有効/無効", "備考",
+      ],
+      [
+        "No.", "Module", "Machine Name", "ON/OFF", "Remarks",
+      ],
+    ]);
 
     $this->setRows($sheet, $row);
 
     $this->setStyle($sheet);
 
-    $centerAlignmentStyle = [
-      'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-      ],
-    ];
-    $sheet->getStyle('D:D')->applyFromArray($centerAlignmentStyle);
+    $this->setStyleCenter('D:D');
 
     $this->setBorders();
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(30);
-    $sheet->getColumnDimension('C')->setWidth(30);
-    $sheet->getColumnDimension('D')->setWidth(10);
-    $sheet->getColumnDimension('E')->setWidth(46);
   }
 
   /**

@@ -15,26 +15,22 @@ class RolesSheet extends BaseSheet {
   protected function initialize():void {
     $sheet = $this->sheet;
     $sheet->setTitle('役割 | Roles');
-    $headers = [
-      "No.", "ロール名", "Role Name", "システム内部名称\nMachine Name", "説明\nDescription", "利用可能機能の例", "備考\nRemarks",
-    ];
-    $sheet->fromArray($headers);
-    $row = 2;
+
+    $row = $this->setHeaders([
+      [5, 20, 20, 25, 25, 30, 40],
+      [
+        "番号", "ロール名（日本語）", "ロール名（英語）", "システム内部名称", "説明", "利用可能機能の例", "備考",
+      ],
+      [
+        "No.", "Role name (Japanese)", "Role Name (English)", "Machine Name", "Description", "Example Uses", "Remarks",
+      ],
+    ]);
 
     $this->setRows($sheet, $row);
 
     $this->setStyle($sheet);
 
     $this->setBorders();
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(20);
-    $sheet->getColumnDimension('C')->setWidth(20);
-    $sheet->getColumnDimension('D')->setWidth(25);
-    $sheet->getColumnDimension('E')->setWidth(25);
-    $sheet->getColumnDimension('F')->setWidth(30);
-    $sheet->getColumnDimension('G')->setWidth(40);
-    $sheet->getColumnDimension('H')->setWidth(50);
   }
 
   /**

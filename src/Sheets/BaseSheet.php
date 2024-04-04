@@ -65,6 +65,13 @@ class BaseSheet {
   protected $skippedColumns;
 
   /**
+   * Tracks the cell where body starts and header ends.
+   *
+   * @var string
+   */
+  protected $bodyCell;
+
+  /**
    * The options passed through the drush command.
    *
    * @var array{
@@ -98,7 +105,6 @@ class BaseSheet {
    * @PHPStan-var FieldTypePluginManagerInterface
    */
   protected $fieldTypePluginManager;
-
 
   /**
    * The config factory.
@@ -319,9 +325,96 @@ class BaseSheet {
   }
 
   /**
+   * Builds the headers of the sheet in a uniform way.
+   *
+   * @param array $headers
+   *   An array of arrays that corresponds to cells starting at the origin.
+   * @param string $startCell
+   *   The first cell of the header array.
+   *
+   * @throws \Exception
+   *   Warns developer that they messed up.
+   */
+  protected function setHeaders(array $headers, string $startCell = "A1"): int {
+    $row = 1;
+    $startCol = 0;
+    if (preg_match('/([A-Z]+)(\d+)/', $startCell, $matches)) {
+      $startCol = $this->colToInt($matches[1]);
+      $row = (int) $matches[2];
+    }
+    else {
+      throw new \Exception("$startCell is not a valid cell format");
+    }
+    $hasSettings = array_reduce($headers[0], function ($carry, $item) {
+      return $carry && is_numeric($item);
+    }, TRUE);
+
+    if ($hasSettings) {
+      $settings = array_shift($headers);
+      foreach ($settings as $i => $width) {
+        $this->sheet->getColumnDimension($this->intToCol($i))->setWidth($width);
+      }
+    }
+
+    foreach ($headers as $rows) {
+      foreach ($rows as $i => $cell) {
+        $col = $this->intToCol($startCol + $i);
+        $this->setCell($this->sheet, $this->intToCol($i), $row, is_string($cell) ? $cell : $cell['value'] ?? '');
+        if (is_array($cell)) {
+          unset($cell['value']);
+          if (!empty($cell)) {
+            $this->sheet->getStyle("{$col}{$row}:{$col}{$row}")->applyFromArray($cell);
+          }
+        }
+        else {
+          $this->sheet->getStyle("{$col}{$row}:{$col}{$row}")->applyFromArray([
+            'font' => [
+              'name' => 'Meiryo UI',
+              'size' => 10,
+            ],
+            'alignment' => [
+              'wrapText' => TRUE,
+              'horizontal' => Alignment::HORIZONTAL_CENTER,
+              'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+              'fillType' => Fill::FILL_SOLID,
+              'startColor' => [
+                'argb' => 'FFBFBFBF',
+              ],
+            ],
+            'borders' => [
+              'left' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+              'right' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+              'top' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+              'bottom' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+            ],
+          ]);
+        }
+      }
+      $row++;
+    }
+
+    $this->bodyCell = $this->intToCol($startCol) . $row;
+    return $row;
+  }
+
+  /**
    * Sets base styles for the sheet.
    */
-  protected function setStyle(Worksheet $sheet, int|string $headerRow = 1): void {
+  protected function setStyle(Worksheet $sheet): void {
     $styleArray = [
       'font' => [
         'name' => 'Meiryo UI',
@@ -332,32 +425,7 @@ class BaseSheet {
         'vertical' => Alignment::VERTICAL_TOP,
       ],
     ];
-    $sheet->getStyle($sheet->calculateWorksheetDimension())->applyFromArray($styleArray);
-
-    $headerStyleArray = [
-      'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-      ],
-      'fill' => [
-        'fillType' => Fill::FILL_SOLID,
-        'startColor' => [
-          'argb' => 'FFBFBFBF',
-        ],
-      ],
-    ];
-
-    $range = NULL;
-    if (is_int($headerRow)) {
-
-      $lastColumn = $sheet->getHighestDataColumn($headerRow);
-      $range = "A{$headerRow}:{$lastColumn}{$headerRow}";
-    }
-    else {
-      $range = $headerRow;
-    }
-
-    $sheet->getStyle($range)->applyFromArray($headerStyleArray);
+    $sheet->getStyle(($this->bodyCell) . ':' . $sheet->getHighestColumn() . $sheet->getHighestRow())->applyFromArray($styleArray);
   }
 
   /**
@@ -448,20 +516,17 @@ class BaseSheet {
       ],
     ];
 
-    if ($startCell === NULL || $endCell === NULL) {
-      $range = $sheet->calculateWorksheetDimension();
-      preg_match('/([A-Z]+)(\d+):([A-Z]+)(\d+)/', $range, $matches);
-      $startColumn = $startCell ? $startCell[0] : $matches[1];
-      $startRow = $startCell ? (int) substr($startCell, 1) : (int) $matches[2];
-      $endColumn = $endCell ? $endCell[0] : $matches[3];
-      $endRow = $endCell ? (int) substr($endCell, 1) : (int) $matches[4];
+    $range = $sheet->calculateWorksheetDimension();
+    preg_match('/([A-Z]+)(\d+):([A-Z]+)(\d+)/', $range, $matches);
+
+    if ($startCell === NULL && !empty($this->bodyCell)) {
+      $startCell = $this->bodyCell;
     }
-    else {
-      $startColumn = $startCell[0];
-      $startRow = (int) substr($startCell, 1);
-      $endColumn = $endCell[0];
-      $endRow = (int) substr($endCell, 1);
-    }
+
+    $startColumn = $startCell ? $startCell[0] : $matches[1];
+    $startRow = $startCell ? (int) substr($startCell, 1) : (int) $matches[2];
+    $endColumn = $endCell ? $endCell[0] : $matches[3];
+    $endRow = $endCell ? (int) substr($endCell, 1) : (int) $matches[4];
 
     for ($row = $startRow; $row <= $endRow; $row++) {
       for ($col = $startColumn; ord($col) <= ord($endColumn); $col = $this->incrementColumn($col)) {
@@ -514,6 +579,19 @@ class BaseSheet {
       $int = intdiv($int, 26) - 1;
     }
     return $letter;
+  }
+
+  /**
+   * Converts a column letter back to an int, such as C -> 2.
+   */
+  protected function colToInt(string $col): int {
+    $int = 0;
+    $length = strlen($col);
+    for ($i = 0; $i < $length; $i++) {
+      $int *= 26;
+      $int += ord($col[$i]) - 64;
+    }
+    return $int - 1;
   }
 
   /**
@@ -824,7 +902,7 @@ class BaseSheet {
    * Translates the string first from db and then from module.
    */
   protected function translate(EntityInterface|string|NULL $mixed, string|NULL $default = NULL): string {
-    if (!$mixed || (isset($this->settings['localization']) && !$this->settings['localization'])) {
+    if (!$mixed) {
       return $default ?? '';
     }
     elseif ($mixed instanceof EntityInterface) {
@@ -841,6 +919,10 @@ class BaseSheet {
 
     if (!isset($string)) {
       return $default ?? '';
+    }
+
+    if (isset($this->settings['localization']) && !$this->settings['localization']) {
+      return $default ?? (string) $string;
     }
 
     if (array_key_exists($string, $this->localization)) {

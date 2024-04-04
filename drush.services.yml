@@ -16,7 +16,7 @@ services:
       - '@module_handler'
       - '@path_alias.manager'
   risley_export.commands:
-    class: \Drupal\risley_export\Commands\RisleyExportCommands
+    class: Drupal\risley_export\Commands\RisleyExportCommands
     arguments:
       - '@risley_export.base_sheet_factory'
     tags:

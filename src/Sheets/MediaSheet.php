@@ -2,7 +2,6 @@
 
 namespace Drupal\risley_export\Sheets;
 
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -17,33 +16,21 @@ class MediaSheet extends BaseSheet {
     $sheet = $this->sheet;
     $sheet->setTitle('メディア | Media');
 
-    $sheet->fromArray([
-      "No.", "Media", "日本語名", "システム内部名称\nMachine name", "説明\nDescription", "翻訳可\nMultilingual", "最大アップロードサイズ\nMaximum Upload Size", "言語設定\nLanguage Settings", "Remarks",
-    ], NULL, 'A1');
-    $row = 2;
+    $row = $this->setHeaders([
+      [5, 20, 10, 30, 35, 13, 15, 30, 30],
+      [
+        "番号", "メディア", "日本語名", "システム内部名称", "説明", "翻訳可", "最大アップロードサイズ", "言語設定", "備考",
+      ],
+      [
+        "No.", "Media", "Japanese Name", "Machine name", "Description", "Multilingual", "Maximum Upload Size", "Language Settings", "Remarks",
+      ],
+    ]);
 
-    $row = $this->setEntities($sheet, $row);
+    $this->setEntities($sheet, $row);
 
     $this->setStyle($sheet);
     $this->setBorders();
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(20);
-    $sheet->getColumnDimension('C')->setWidth(10);
-    $sheet->getColumnDimension('D')->setWidth(30);
-    $sheet->getColumnDimension('E')->setWidth(35);
-    $sheet->getColumnDimension('F')->setWidth(13);
-    $sheet->getColumnDimension('G')->setWidth(15);
-    $sheet->getColumnDimension('H')->setWidth(30);
-    $sheet->getColumnDimension('I')->setWidth(30);
-
-    $centerAlignmentStyle = [
-      'alignment' => [
-        'horizontal' => Alignment::HORIZONTAL_CENTER,
-        'vertical' => Alignment::VERTICAL_CENTER,
-      ],
-    ];
-    $sheet->getStyle('E:G')->applyFromArray($centerAlignmentStyle);
+    $this->setStyleCenter('E:G');
   }
 
   /**

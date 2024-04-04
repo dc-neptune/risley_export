@@ -16,6 +16,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\path_alias\AliasManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
+use Drush\Drush;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -141,7 +142,7 @@ class BaseSheetFactory {
    *
    * @var \Consolidation\SiteAlias\SiteAliasManager
    */
-  protected $siteAliasManager;
+  public $siteAliasManager;
 
   /**
    * The path alias manager.
@@ -177,10 +178,10 @@ class BaseSheetFactory {
    *   The Info Parser service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler interface.
-   * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
-   *   The site alias manager.
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
+   * @param \Consolidation\SiteAlias\SiteAliasManager|null $site_alias_manager
+   *   The site alias manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -195,8 +196,8 @@ class BaseSheetFactory {
     LoggerChannelFactoryInterface $logger_factory,
     InfoParserInterface $info_parser,
     ModuleHandlerInterface $module_handler,
-    SiteAliasManager $site_alias_manager,
-    AliasManagerInterface $path_alias_manager
+    AliasManagerInterface $path_alias_manager,
+    SiteAliasManager $site_alias_manager = NULL
   ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -212,8 +213,8 @@ class BaseSheetFactory {
     $this->infoParser = $info_parser;
     $this->moduleHandler = $module_handler;
     $this->settings = $this->buildSettings();
-    $this->siteAliasManager = $site_alias_manager;
     $this->pathAliasManager = $path_alias_manager;
+    $this->siteAliasManager = $site_alias_manager ?? Drush::aliasManager();
   }
 
   /**

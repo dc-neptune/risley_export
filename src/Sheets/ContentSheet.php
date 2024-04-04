@@ -16,34 +16,27 @@ class ContentSheet extends BaseSheet {
     $sheet = $this->sheet;
     $sheet->setTitle('コンテンツ | Content');
 
-    $sheet->fromArray([
-      "No.", "Content Type", "", "", "デフォルト設定", "", "", "", "標準機能設定", "", "", "", "", "", "", "拡張機能設定", "", "", "", "カスタム機能設定",
-    ], NULL, 'A1');
-    $sheet->fromArray([
-      "", "Name", "システム内部名称\nMachine Name", "説明\nDescription", "掲載", "フロントページへ掲載", "リスト上部に固定", "新しいリビジョンの作成", "メニューリンクを生成", "URLエイリアス", "投稿前にプレビュー", "翻訳可", "ワークフロー適用", "作成者と日付情報を表示", "言語設定", "メタタグ設定", "スケジュール設定", "XMLサイトマップ", "ページ表示", "", "",
-    ], NULL, 'A2');
-    $sheet->fromArray([
-      "", "", "", "", "Published", "Promoted to front page", "Sticky at top of lists", "Create new revision", "Menu", "URL alias", "Preview before submitting", "Multilingual", "Workflow", "Display author and date information", "Language settings", "Metatag", "Scheduler", "XMLsitemap", "Rabbit Hole", "", "",
-    ], NULL, 'A3');
-    $row = 4;
+    $row = $this->setHeaders([
+      [5, 24, 22.5, 35, 12, 12, 12, 12, 20, 12, 12, 12, 12, 12, 30, 12, 12, 12, 15, 8, 8],
+      [
+        "番号", "コンテンツタイプ　Content Type", "", "", "デフォルト設定 Default Settings", "", "", "", "標準機能設定 Basic Settings", "", "", "", "", "", "", "拡張機能設定 Extended Settings", "", "", "", "カスタム機能設定", "",
+      ],
+      [
+        "番号", "ラベル", "システム内部名称", "説明", "掲載", "フロントページへ掲載", "リスト上部に固定", "新しいリビジョンの作成", "メニューリンクを生成", "URLエイリアス", "投稿前にプレビュー", "翻訳可", "ワークフロー適用", "作成者と日付情報を表示", "言語設定", "メタタグ設定", "スケジュール設定", "XMLサイトマップ", "ページ表示", "", "",
+      ],
+      [
+        "No.", "Label", "Machine Name", "Description", "Published", "Promoted to front page", "Sticky at top of lists", "Create new revision", "Menu", "URL alias", "Preview before submitting", "Multilingual", "Workflow", "Display author and date information", "Language settings", "Metatag", "Scheduler", "XMLsitemap", "Rabbit Hole", "", "",
+      ],
+    ]);
 
-    $row = $this->setEntities($sheet, $row);
-
-    $this->setStyle($sheet, 1);
-    $this->setStyle($sheet, 2);
-    $this->setStyle($sheet, 3);
-    $this->setBorders();
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(24);
-    $sheet->getColumnDimension('C')->setWidth(22.5);
-    $sheet->getColumnDimension('D')->setWidth(35);
-    $sheet->getColumnDimension('I')->setWidth(20);
-    $sheet->getColumnDimension('O')->setWidth(30);
-    $sheet->getColumnDimension('S')->setWidth(15);
-    foreach (['E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'T', 'U'] as $col) {
-      $sheet->getColumnDimension($col)->setWidth(6.5);
+    foreach (['A1:A2', 'B1:D1', 'E1:H1', 'I1:O1', 'P1:S1', 'T1:U1'] as $range) {
+      $sheet->mergeCells($range);
     }
+
+    $this->setEntities($sheet, $row);
+
+    $this->setStyle($sheet);
+    $this->setBorders();
 
     $this->setStyleCenter('E:T');
   }

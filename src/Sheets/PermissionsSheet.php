@@ -4,6 +4,8 @@ namespace Drupal\risley_export\Sheets;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -18,25 +20,169 @@ class PermissionsSheet extends BaseSheet {
     $sheet = $this->sheet;
     $sheet->setTitle('権限 | Permissions');
     $headers = [
-      "No.", "", "", "権限 (日本語)\nPermission (Japanese)", "モジュール\nModule", "権限 (英語)\nPermission (English)",
+      [5, 20, 20, 30, 25, 60],
+      ["番号", "", "", "権限 (日本語)", "モジュール", "権限 (英語)"],
+      ["No.", "", "", "Permission (Japanese)", "Module", "Permission (English)"],
     ];
 
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(20);
-    $sheet->getColumnDimension('C')->setWidth(20);
-    $sheet->getColumnDimension('D')->setWidth(30);
-    $sheet->getColumnDimension('E')->setWidth(25);
-    $sheet->getColumnDimension('F')->setWidth(60);
+    // Values are.
+    $roles = array_values(array_map(function ($role) {
+      return $role->get('label');
+    }, $this->getPermissionRoles()));
+    $roleCount = count($roles);
+    $startCount = count($headers[0]);
+    for ($i = 0; $i < $roleCount; $i++) {
+      $headers[0][] = 3;
+    }
+    foreach ($roles as $i => $roleLabel) {
+      if (count($headers) <= $i + 1) {
+        $headers[] = [];
+        for ($j = 0; $j < $startCount; $j++) {
+          $headers[$i + 1][] = [
+            'value' => '',
+            'fill' => [
+              'fillType' => Fill::FILL_SOLID,
+              'startColor' => [
+                'argb' => 'FFBFBFBF',
+              ],
+            ],
+            'borders' => [
+              'left' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+              'right' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FF000000'],
+              ],
+              'top' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FFBFBFBF'],
+              ],
+              'bottom' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['argb' => 'FFBFBFBF'],
+              ],
+            ],
+          ];
+        }
+      }
 
-    $column = 'G';
-    foreach ($this->getPermissionRoles() as $role) {
-      $headers[] = $role->get('label');
-      $sheet->getColumnDimension($column)->setWidth(5);
-      $column = $this->incrementColumn($column);
+      // Left of the name blank.
+      for ($j = 0; $j < $i; $j++) {
+        $headers[$i + 1][] = [
+          'value' => '',
+          'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => [
+              'argb' => 'FFBFBFBF',
+            ],
+          ],
+          'borders' => [
+            'left' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FF000000'],
+            ],
+            'right' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FF000000'],
+            ],
+            'top' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FFBFBFBF'],
+            ],
+            'bottom' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FFBFBFBF'],
+            ],
+          ],
+        ];
+      }
+      // Role name.
+      $headers[$i + 1][] = [
+        'value' => $roleLabel,
+        'font' => [
+          'name' => 'Meiryo UI',
+          'size' => 10,
+        ],
+        'alignment' => [
+        // Ensure this is false to prevent wrapping.
+          'wrapText' => FALSE,
+        // Example alignment.
+          'horizontal' => Alignment::HORIZONTAL_LEFT,
+        ],
+        'fill' => [
+          'fillType' => Fill::FILL_SOLID,
+          'startColor' => [
+            'argb' => 'FFBFBFBF',
+          ],
+        ],
+        'borders' => [
+          'left' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['argb' => 'FF000000'],
+          ],
+          'top' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['argb' => 'FF000000'],
+          ],
+          'right' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['argb' => 'FFBFBFBF'],
+          ],
+          'bottom' => [
+            'borderStyle' => Border::BORDER_THIN,
+            'color' => ['argb' => 'FFBFBFBF'],
+          ],
+        ],
+      ];
+      $this->sheet->mergeCells(
+        $this->intToCol(count($headers[$i + 1]) - 1) .
+        ($i + 1) .
+        ':' .
+        $this->intToCol($roleCount + $startCount) .
+        ($i + 1));
+      for ($j = $i + 1; $j < $roleCount; $j++) {
+        $headers[$i + 1][] = [
+          'value' => '',
+          'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => [
+              'argb' => 'FFBFBFBF',
+            ],
+          ],
+          'borders' => [
+            'top' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FF000000'],
+            ],
+            'bottom' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FF000000'],
+            ],
+            'right' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FFBFBFBF'],
+            ],
+            'left' => [
+              'borderStyle' => Border::BORDER_THIN,
+              'color' => ['argb' => 'FFBFBFBF'],
+            ],
+          ],
+        ];
+      }
     }
 
-    $sheet->fromArray($headers);
-    $row = 2;
+    $row = $this->setHeaders($headers);
+
+    if ($roleCount > 2) {
+      for ($i = 0; $i < 6; $i++) {
+        $col = $this->intToCol($i);
+        $lastRow = $row - 1;
+        $range = "{$col}2:{$col}{$lastRow}";
+        $this->sheet->mergeCells($range);
+      }
+    }
 
     $this->setRows($sheet, $row);
 
@@ -144,7 +290,7 @@ class PermissionsSheet extends BaseSheet {
         if (!$some) {
           continue;
         }
-        var_dump("Omitting empty permission '$key'\n");
+        $this->logger->notice(dt("Omitting empty permission '!key'", ['!key' => $key]));
       }
 
       if ($configLabel === '') {

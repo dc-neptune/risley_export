@@ -22,29 +22,23 @@ class VersionSheet extends BaseSheet {
     $title = ucfirst($title);
     $title = "Drupal " . $title . " Structure";
 
-    $this->setCell($sheet, "B", 1, "Project:");
-    $this->setCell($sheet, "B", 2, "Title:");
-    $this->setCell($sheet, "C", 2, $this->translate($title));
-    $this->setCell($sheet, "E", 2, $title);
+    $row = $this->setHeaders([
+      [5, 12, 13.5, 30, 60],
+      [[], ['value' => 'Project:'], [], [], []],
+      [[], ['value' => "Title:"], ['value' => $this->translate($title)], [], ['value' => $title]],
+      [[], [], [], [], []],
+      ["No.", "Date", "Author", "Sheets", "Note"],
+    ]);
 
-    $headers = [
-      "No.", "Date", "Author", "Sheets", "Note",
-    ];
-    $sheet->fromArray($headers, NULL, 'A4');
-    $row = 5;
+    $sheet->mergeCells('C1:D1');
+    $sheet->mergeCells('C2:D2');
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet, 4);
+    $this->setStyle($sheet);
 
     $this->setBorders("B1", "E2");
     $this->setBorders("A4");
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(12);
-    $sheet->getColumnDimension('C')->setWidth(13.5);
-    $sheet->getColumnDimension('D')->setWidth(30);
-    $sheet->getColumnDimension('E')->setWidth(60);
 
     $titleStyle = [
       'font' => [

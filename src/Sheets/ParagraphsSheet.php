@@ -20,7 +20,15 @@ class ParagraphsSheet extends BaseSheet {
     $sheet->fromArray([
       "No.", "Paragraph", "日本語名", "システム内部名称\nMachine name", "翻訳可\nMultilingual", "Remarks",
     ], NULL, 'A1');
-    $row = 2;
+    $row = $this->setHeaders([
+      [5, 30, 30, 45, 13, 30],
+      [
+        "番号", "パラグラフ", "日本語名", "システム内部名称", "翻訳可", "備考",
+      ],
+      [
+        "No.", "Paragraph", "Japanese Name", "Machine name", "Multilingual", "Remarks",
+      ],
+    ]);
 
     $row = $this->setEntities($sheet, $row);
 
@@ -45,18 +53,9 @@ class ParagraphsSheet extends BaseSheet {
     $this->setCell($sheet, 'B', $lastRow + 2, 'パラグラフ共通設定');
 
     $this->setStyle($sheet);
-    $this->setStyle($sheet, "B" . ($lastRow + 3) . ":C" . ($lastRow + 3));
-    $this->setStyle($sheet, "B" . ($lastRow + 7) . ":C" . ($lastRow + 7));
     $this->setBorders("A1", $lastColumn . $lastRow);
     $this->setBorders('B' . ($lastRow + 3), 'C' . ($lastRow + 4));
     $this->setBorders('B' . ($lastRow + 6), 'C' . ($lastRow + 8));
-
-    $sheet->getColumnDimension('A')->setWidth(5);
-    $sheet->getColumnDimension('B')->setWidth(30);
-    $sheet->getColumnDimension('C')->setWidth(30);
-    $sheet->getColumnDimension('D')->setWidth(45);
-    $sheet->getColumnDimension('E')->setWidth(13);
-    $sheet->getColumnDimension('F')->setWidth(30);
 
     $centerAlignmentStyle = [
       'alignment' => [
