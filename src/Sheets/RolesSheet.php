@@ -22,7 +22,7 @@ class RolesSheet extends BaseSheet {
         "番号", "ロール名（日本語）", "ロール名（英語）", "システム内部名称", "説明", "利用可能機能の例", "備考",
       ],
       [
-        "No.", "Role name (Japanese)", "Role Name (English)", "Machine Name", "Description", "Example Uses", "Remarks",
+        "No.", "Role Name (Japanese)", "Role Name (English)", "Machine Name", "Description", "Example Uses", "Remarks",
       ],
     ]);
 

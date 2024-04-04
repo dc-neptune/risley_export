@@ -1006,7 +1006,8 @@ class BaseSheet {
   protected function getModulesAcrossSites($origin = 'all'):array|NULL {
     $baseSheet = $this;
     $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
-      $command = "/opt/drupal/vendor/bin/drush $site ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
+      $uri = $this->siteAliasManager->get($site)->uri();
+      $command = "/opt/drupal/vendor/bin/drush -l=$uri ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
       $jsonModules = shell_exec($command);
 
       if (!is_string($jsonModules)) {
@@ -1191,8 +1192,11 @@ class BaseSheet {
   protected function getWebformsAcrossSites():array|NULL {
     $sites = array_reduce($this->sites, function ($result, $site) {
       // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
+      var_dump($site);
+      $uri = $this->siteAliasManager->get($site)->uri();
       $command = <<<EOT
-      /opt/drupal/vendor/bin/drush $site ev '
+      /opt/drupal/vendor/bin/drush -l=$uri ev '
+      if(!\\Drupal::service("entity_type.manager")->hasDefinition("webform")) return [];
       \$webforms = \\Drupal::service("entity_type.manager")->getStorage("webform")->loadMultiple();
       \$webformsArray = array_map(function(\$webform) {
           \$array = \$webform->toArray();
