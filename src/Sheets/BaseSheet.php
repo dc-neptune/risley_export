@@ -1233,8 +1233,6 @@ class BaseSheet {
       }
 
       $result[$site] = $webforms;
-      var_dump($site, count($webforms));
-
       return $result;
     }, []);
 
