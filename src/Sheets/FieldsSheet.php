@@ -529,7 +529,7 @@ class FieldsSheet extends BaseSheet {
         $handlerSettings = $settings['handler_settings'];
         $bundles = $handlerSettings['target_bundles'];
         if (empty($bundles)) {
-          return 'No enabled types';
+          return '';
         }
         $formattedSettings[] = $label . implode(", ", $bundles);
         if ($handlerSettings['auto_create']) {
@@ -552,7 +552,7 @@ class FieldsSheet extends BaseSheet {
         }
 
         if (empty($enabledBundles)) {
-          return 'No enabled types';
+          return '';
         }
 
         return $label . implode(", ", $enabledBundles);
