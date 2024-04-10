@@ -30,12 +30,11 @@ class VersionSheet extends BaseSheet {
       ["No.", "Date", "Author", "Sheets", "Note"],
     ]);
 
-    $sheet->mergeCells('C1:D1');
-    $sheet->mergeCells('C2:D2');
+    $this->merge(['C1:D1', 'C2:D2']);
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     $this->setBorders("B1", "E2");
     $this->setBorders("A4");

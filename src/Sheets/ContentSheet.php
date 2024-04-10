@@ -22,23 +22,20 @@ class ContentSheet extends BaseSheet {
         "番号", "コンテンツタイプ　Content Type", "", "", "デフォルト設定 Default Settings", "", "", "", "標準機能設定 Basic Settings", "", "", "", "", "", "", "拡張機能設定 Extended Settings", "", "", "", "カスタム機能設定", "",
       ],
       [
-        "番号", "ラベル", "システム内部名称", "説明", "掲載", "フロントページへ掲載", "リスト上部に固定", "新しいリビジョンの作成", "メニューリンクを生成", "URLエイリアス", "投稿前にプレビュー", "翻訳可", "ワークフロー適用", "作成者と日付情報を表示", "言語設定", "メタタグ設定", "スケジュール設定", "XMLサイトマップ", "ページ表示", "", "",
+        "", "ラベル", "システム内部名称", "説明", "掲載", "フロントページへ掲載", "リスト上部に固定", "新しいリビジョンの作成", "メニューリンクを生成", "URLエイリアス", "投稿前にプレビュー", "翻訳可", "ワークフロー適用", "作成者と日付情報を表示", "言語設定", "メタタグ設定", "スケジュール設定", "XMLサイトマップ", "ページ表示", "", "",
       ],
       [
         "No.", "Label", "Machine Name", "Description", "Published", "Promoted to front page", "Sticky at top of lists", "Create new revision", "Menu", "URL alias", "Preview before submitting", "Multilingual", "Workflow", "Display author and date information", "Language settings", "Metatag", "Scheduler", "XMLsitemap", "Rabbit Hole", "", "",
       ],
     ]);
 
-    foreach (['A1:A2', 'B1:D1', 'E1:H1', 'I1:O1', 'P1:S1', 'T1:U1'] as $range) {
-      $sheet->mergeCells($range);
-    }
-
     $this->setEntities($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
     $this->setBorders();
 
     $this->setStyleCenter('E:T');
+    $this->merge(['A1:A2', 'B1:D1', 'E1:H1', 'I1:O1', 'P1:S1', 'T1:U1']);
   }
 
   /**

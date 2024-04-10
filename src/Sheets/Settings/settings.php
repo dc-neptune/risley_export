@@ -57,3 +57,10 @@ $settings['weightedFields'] = TRUE;
  * If set to true, add a localization file to Localization.
  */
 $settings['localization'] = FALSE;
+
+
+/*
+ * If set to true, allows merging cells for a more
+ * beautiful end state.
+ */
+$settings['merge'] = FALSE;

@@ -38,7 +38,7 @@ class CustomModulesSheet extends BaseSheet {
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     $this->setStyleCenter('D:D');
 

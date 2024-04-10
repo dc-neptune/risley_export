@@ -47,12 +47,15 @@ class ParagraphsSheet extends BaseSheet {
     $this->setCell($sheet, 'B', $lastRow + 7, '設定項目');
     $this->setCell($sheet, 'C', $lastRow + 7, '設定値');
     $this->setCell($sheet, 'B', $lastRow + 8, '翻訳可能');
+    $this->setStyleHeader([
+      "B" . ($lastRow + 3) . ":C" . ($lastRow + 3),
+      "B" . ($lastRow + 7) . ":C" . ($lastRow + 7),
+    ]);
     $state = '!!TODO!!';
     $this->setCell($sheet, 'C', $lastRow + 8, $state);
 
     $this->setCell($sheet, 'B', $lastRow + 2, 'パラグラフ共通設定');
-
-    $this->setStyle($sheet);
+    $this->setStyle();
     $this->setBorders("A1", $lastColumn . $lastRow);
     $this->setBorders('B' . ($lastRow + 3), 'C' . ($lastRow + 4));
     $this->setBorders('B' . ($lastRow + 6), 'C' . ($lastRow + 8));

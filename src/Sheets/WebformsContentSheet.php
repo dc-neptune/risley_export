@@ -47,7 +47,7 @@ class WebformsContentSheet extends BaseSheet {
         15,
       ],
       ["番号", "Webform", "", "", "", "Multisite", "標準機能設定 Basic Settings", "", "", "", "", ""],
-      ["番号",
+      ["",
         "ラベル",
         "タイトル",
         "システム内部名称",
@@ -75,13 +75,11 @@ class WebformsContentSheet extends BaseSheet {
       ],
     ]);
 
-    foreach (['A1:A2', 'B1:E1', 'G1:L1', 'I2:I3', 'J2:J3', 'K2:K3', 'L2:L3'] as $range) {
-      $sheet->mergeCells($range);
-    }
+    $this->merge(['A1:A2', 'B1:E1', 'G1:L1', 'I2:I3', 'J2:J3', 'K2:K3', 'L2:L3']);
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     foreach (['I:L', 'F:F'] as $range) {
       $this->setStyleCenter($range);

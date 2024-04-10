@@ -28,9 +28,9 @@ class MediaSheet extends BaseSheet {
 
     $this->setEntities($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
     $this->setBorders();
-    $this->setStyleCenter('E:G');
+    $this->setStyleCenter('B:G');
   }
 
   /**

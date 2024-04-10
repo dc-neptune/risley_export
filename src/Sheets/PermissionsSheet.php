@@ -31,6 +31,7 @@ class PermissionsSheet extends BaseSheet {
     }, $this->getPermissionRoles()));
     $roleCount = count($roles);
     $startCount = count($headers[0]);
+    $mergeRanges = [];
     for ($i = 0; $i < $roleCount; $i++) {
       $headers[0][] = 3;
     }
@@ -136,12 +137,12 @@ class PermissionsSheet extends BaseSheet {
           ],
         ],
       ];
-      $this->sheet->mergeCells(
+      $mergeRanges[] =
         $this->intToCol(count($headers[$i + 1]) - 1) .
         ($i + 1) .
         ':' .
         $this->intToCol($roleCount + $startCount) .
-        ($i + 1));
+        ($i + 1);
       for ($j = $i + 1; $j < $roleCount; $j++) {
         $headers[$i + 1][] = [
           'value' => '',
@@ -174,21 +175,20 @@ class PermissionsSheet extends BaseSheet {
     }
 
     $row = $this->setHeaders($headers);
-
+    $this->merge($mergeRanges);
     if ($roleCount > 2) {
       for ($i = 0; $i < 6; $i++) {
         $col = $this->intToCol($i);
         $lastRow = $row - 1;
         $range = "{$col}2:{$col}{$lastRow}";
-        $this->sheet->mergeCells($range);
+        $this->merge($range);
       }
     }
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet);
-
-    $this->setBorders();
+    // $this->setStyle();
+    // $this->setBorders();
   }
 
   /**

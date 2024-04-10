@@ -22,6 +22,7 @@ use Drupal\node\Entity\NodeType;
 use Drupal\path_alias\AliasManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\webform\Entity\Webform;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -313,7 +314,7 @@ class BaseSheet {
     ];
     $sheet->fromArray($headers, NULL, 'A1');
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     $this->setBorders();
 
@@ -321,7 +322,7 @@ class BaseSheet {
     $sheet->getColumnDimension('B')->setWidth(20);
     $sheet->getColumnDimension('C')->setWidth(20);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
   }
 
   /**
@@ -414,7 +415,7 @@ class BaseSheet {
   /**
    * Sets base styles for the sheet.
    */
-  protected function setStyle(Worksheet $sheet): void {
+  protected function setStyle(): void {
     $styleArray = [
       'font' => [
         'name' => 'Meiryo UI',
@@ -425,7 +426,7 @@ class BaseSheet {
         'vertical' => Alignment::VERTICAL_TOP,
       ],
     ];
-    $sheet->getStyle(($this->bodyCell) . ':' . $sheet->getHighestColumn() . $sheet->getHighestRow())->applyFromArray($styleArray);
+    $this->sheet->getStyle(($this->bodyCell) . ':' . $this->sheet->getHighestColumn() . $this->sheet->getHighestRow())->applyFromArray($styleArray);
   }
 
   /**
@@ -551,9 +552,117 @@ class BaseSheet {
 
   }
 
-  /*
-   * UTILITIES
+  /**
+   * UTILITIES.
    */
+
+  /**
+   * Gets all cells in a range.
+   */
+  public function getCellsInRange(string $range): array {
+    [$startCell, $endCell] = explode(':', $range);
+
+    [$startColumn, $startRow] = Coordinate::coordinateFromString($startCell);
+    [$endColumn, $endRow] = Coordinate::coordinateFromString($endCell);
+
+    $cells = [];
+
+    for ($row = $startRow; $row <= $endRow; $row++) {
+      for ($col = Coordinate::columnIndexFromString($startColumn); $col <= Coordinate::columnIndexFromString($endColumn); $col++) {
+        $cells[] = Coordinate::stringFromColumnIndex($col) . $row;
+      }
+    }
+
+    return $cells;
+  }
+
+  /**
+   * Gets the adjacent cell.
+   */
+  public function getAdjacentCell(string $cell, string $side): string {
+    [$col, $row] = Coordinate::coordinateFromString($cell);
+
+    switch ($side) {
+      case 'top':
+        $row--;
+        break;
+
+      case 'left':
+        $col = Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($col) - 1);
+        break;
+
+      case 'right':
+        $col = Coordinate::stringFromColumnIndex(Coordinate::columnIndexFromString($col) + 1);
+        break;
+
+      case 'bottom':
+        $row++;
+        break;
+
+      default:
+        return $cell;
+    }
+
+    return $col . $row;
+
+  }
+
+  /**
+   * Merges all cells.
+   */
+  protected function merge(array|string $ranges) {
+
+    if (is_string($ranges)) {
+      $ranges = [$ranges];
+    }
+
+    if (!$this->settings['merge']) {
+      foreach ($ranges as $range) {
+        $cells = $this->getCellsInRange($range);
+        $color = $this->sheet->getStyle($cells[0])->getFill()->getStartColor()->getRGB();
+        $fillStyle = [
+          'fillType' => Fill::FILL_SOLID,
+          'startColor' => [
+            'argb' => $color,
+          ],
+          'endColor' => [
+            'argb' => $color,
+          ],
+        ];
+        $borderStyle = [
+          'borderStyle' => BORDER::BORDER_THIN,
+          'color' => ['argb' => $color],
+        ];
+        $alignmentStyle = [
+          'wrapText' => FALSE,
+          'horizontal' => Alignment::HORIZONTAL_LEFT,
+          'vertical' => Alignment::VERTICAL_TOP,
+        ];
+        $edgeStyle = $this->sheet->getStyle($cells[0])->getBorders()->getTop()->exportArray();
+        foreach ($cells as $cell) {
+          $style = $this->sheet->getStyle($cell);
+          $style->getFill()->applyFromArray($fillStyle);
+          $style->getAlignment()->applyFromArray($alignmentStyle);
+          foreach (['top', 'bottom', 'left', 'right'] as $side) {
+            $adjacentCell = $this->getAdjacentCell($cell, $side);
+            $method = 'get' . ucfirst($side);
+            if (!in_array($adjacentCell, $cells)) {
+              $style->getBorders()->$method()->applyFromArray($edgeStyle);
+            }
+            else {
+              $style->getBorders()->$method()->applyFromArray($borderStyle);
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    foreach ($ranges as $range) {
+      $this->sheet->mergeCells($range);
+    }
+  }
 
   /**
    * Sets a single cell.
@@ -978,7 +1087,14 @@ class BaseSheet {
   /**
    * Centers stuff.
    */
-  protected function setStyleCenter(string $range):void {
+  protected function setStyleCenter(array|string $range):void {
+    if (is_array($range)) {
+      foreach ($range as $_range) {
+        $this->setStyleHeader($_range);
+      }
+      return;
+    }
+
     $centerAlignmentStyle = [
       'alignment' => [
         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -986,6 +1102,32 @@ class BaseSheet {
       ],
     ];
     $this->sheet->getStyle($range)->applyFromArray($centerAlignmentStyle);
+  }
+
+  /**
+   * Headers stuff.
+   */
+  protected function setStyleHeader(string|array $range):void {
+    if (is_array($range)) {
+      foreach ($range as $_range) {
+        $this->setStyleHeader($_range);
+      }
+      return;
+    }
+
+    $style = [
+      'alignment' => [
+        'horizontal' => Alignment::HORIZONTAL_CENTER,
+        'vertical' => Alignment::VERTICAL_CENTER,
+      ],
+      'fill' => [
+        'fillType' => Fill::FILL_SOLID,
+        'startColor' => [
+          'argb' => 'FFBFBFBF',
+        ],
+      ],
+    ];
+    $this->sheet->getStyle($range)->applyFromArray($style);
   }
 
   /**
@@ -1035,7 +1177,6 @@ class BaseSheet {
 
       return $result;
     }, []);
-
     return $sites;
   }
 
@@ -1183,10 +1324,15 @@ class BaseSheet {
       $entityType = end($entityType);
       $entityLabel = (string) $this->entityTypeManager->getDefinition($entityType)?->getLabel();
 
-      return "$label ($entityLabel)";
+      return $entityLabel;
     }
 
-    return is_array($_ = $this->fieldTypePluginManager->getDefinition($fieldType)) ? $_['label'] : '';
+    if ($fieldType === 'file') {
+      $uriScheme = $fieldSettings['uri_scheme'];
+      $label = "$label ($uriScheme)";
+    }
+
+    return $label;
   }
 
   /**

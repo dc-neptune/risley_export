@@ -56,11 +56,11 @@ class MenusSheet extends BaseSheet {
     }
 
     // Merge Menu items.
-    $sheet->mergeCells("C1:" . $this->intToCol(2 + $maxDepth) . "1");
+    $this->merge("C1:" . $this->intToCol(2 + $maxDepth) . "1");
 
     $this->setRows($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     $this->setBorders();
 

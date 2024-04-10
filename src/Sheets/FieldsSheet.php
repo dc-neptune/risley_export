@@ -11,20 +11,311 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * Fields sheet for data spreadsheet.
  */
 class FieldsSheet extends BaseSheet {
+  /**
+   * Format field settings.
+   *
+   * @var array
+   */
+  protected $fieldformatter;
 
   /**
    * Initializes the sheet.
    */
   protected function initialize(): void {
+    $this->fieldformatter = [
+
+      'link' => [
+        'title' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => "リンクテキストを許可: " . ['無効', '任意', '必須'][$arg],
+          ],
+        ],
+        'link_type' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => "リンクテキストを許可: " . (['内部リンクのみ', '外部リンクのみ'][$arg] ?? '内部と外部リンクの両方'),
+          ],
+        ],
+      ],
+      'link_destination' => [
+        'target_options' => [
+          [
+            'compare' => fn($arg) => empty(array_values($arg)),
+            'return' => fn($arg) => "ファイルディレクトリー: $arg",
+          ],
+          [
+            'compare' => fn($arg) => !empty(array_values($arg)),
+            'return' => fn($arg) => "参照リンクタイプ: " . implode(", ", array_filter(array_map(fn($key) => ['self' => 'このページ', 'field_document_file' => 'ドキュメントファイル', 'field_target_url' => '指定URL', 'nolink' => 'リンク無し'][$key] ?? NULL, array_keys($arg)), fn($key) => !empty($key))),
+          ],
+        ],
+      ],
+      'file' => [
+        'file_directory' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "ファイルディレクトリー: $arg",
+          ],
+        ],
+        'file_extensions' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "許可拡張子: " . implode(", ", explode(" ", $arg)),
+          ],
+        ],
+        'max_filesize' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "サイズ上限: $arg",
+          ],
+        ],
+        'description_field' => [
+          [
+            'compare' => fn($arg) => $arg === TRUE,
+            'return' => fn($arg) => "説明の入力欄を表示する",
+          ],
+        ],
+        'display_field' => [
+          [
+            'compare' => fn($arg) => $arg === TRUE,
+            'return' => fn($arg) => " 非表示を可能にするチェックボックスを追加する",
+          ],
+        ],
+        'display_default' => [
+          [
+            'compare' => fn($arg, $settings) => $settings['display_field'] === TRUE && $arg === TRUE,
+            'return' => fn($arg) => "デフォルト: 表示",
+          ],
+          [
+            'compare' => fn($arg, $settings) => $settings['display_field'] === TRUE && $arg === FALSE,
+            'return' => fn($arg) => "デフォルト: 非表示",
+          ],
+        ],
+      ],
+      'image' => [
+        'file_directory' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "ファイルディレクトリー: $arg",
+          ],
+        ],
+        'file_extensions' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "許可拡張子: " . implode(", ", explode(" ", $arg)),
+          ],
+        ],
+        'max_resolution' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "最大解像度: $arg",
+          ],
+        ],
+        'min_resolution' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "最小解像度: $arg",
+          ],
+        ],
+        'alt_field' => [
+          [
+            'compare' => fn($arg) => $arg === FALSE,
+            'return' => fn($arg) => 'altの入力欄を表示しない',
+          ],
+        ],
+        'alt_field_required' => [
+          [
+            'compare' => fn($arg, $settings) => $settings['alt_field'] === TRUE && $arg === TRUE,
+            'return' => fn($arg) => 'altを必須にする',
+          ],
+        ],
+        'title_field' => [
+          [
+            'compare' => fn($arg) => $arg === TRUE,
+            'return' => fn($arg) => "タイトルの入力欄を表示する",
+          ],
+        ],
+        'title_field_required' => [
+          [
+            'compare' => fn($arg, $settings) => $settings['alt_field'] === TRUE && $arg === TRUE,
+            'return' => fn($arg) => 'タイトルを必須にする',
+          ],
+        ],
+        'max_filesize' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "サイズ上限: $arg",
+          ],
+        ],
+        'description_field' => [
+          [
+            'compare' => fn($arg) => $arg === TRUE,
+            'return' => fn($arg) => "説明の入力欄を表示する",
+          ],
+        ],
+        'display_field' => [
+          [
+            'compare' => fn($arg) => $arg === TRUE,
+            'return' => fn($arg) => " 非表示を可能にするチェックボックスを追加する",
+          ],
+        ],
+        'display_default' => [
+          [
+            'compare' => fn($arg, $settings) => $settings['display_field'] === TRUE && $arg === TRUE,
+            'return' => fn($arg) => $arg ? "デフォルト: 表示" : "デフォルト: 非表示",
+          ],
+        ],
+      ],
+      'list_string' => [
+        'allowed_values' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key|$value", array_keys($arg), $arg)),
+          ],
+        ],
+      ],
+      'list_integer' => [
+        'allowed_values' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key|$value", array_keys($arg), $arg)),
+          ],
+        ],
+      ],
+      'integer' => [
+        'min' => [
+          [
+            'compare' => fn($arg) => is_numeric($arg),
+            'return' => fn($arg) => "最小値: $arg",
+          ],
+        ],
+        'max' => [
+          [
+            'compare' => fn($arg) => is_numeric($arg),
+            'return' => fn($arg) => "最大値: $arg",
+          ],
+        ],
+        'prefix' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "接頭辞: $arg",
+          ],
+        ],
+        'suffix' => [
+          [
+            'compare' => fn($arg) => !empty($arg),
+            'return' => fn($arg) => "接尾辞: $arg",
+          ],
+        ],
+      ],
+      'decimal' => [
+        'min' => [
+          [
+            'compare' => fn($arg) => is_numeric($arg),
+            'return' => fn($arg) => "最小値: $arg",
+          ],
+        ],
+        'max' => [
+            [
+              'compare' => fn($arg) => is_numeric($arg),
+              'return' => fn($arg) => "最大値: $arg",
+            ],
+        ],
+        'prefix' => [
+              [
+                'compare' => fn($arg) => !empty($arg),
+                'return' => fn($arg) => "接頭辞: $arg",
+              ],
+        ],
+        'suffix' => [
+                [
+                  'compare' => fn($arg) => !empty($arg),
+                  'return' => fn($arg) => "接尾辞: $arg",
+                ],
+        ],
+        'precision' => [
+                  [
+                    'compare' => fn($arg) => $arg > 10,
+                    'return' => fn($arg) => "有効桁数: $arg",
+                  ],
+        ],
+        'scale' => [
+                    [
+                      'compare' => fn($arg) => $arg !== 2,
+                      'return' => fn($arg) => "小数点以下桁数: $arg",
+                    ],
+        ],
+      ],
+      'boolean' => [
+        'on_label' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => "ONの名称: $arg",
+          ],
+        ],
+        'off_label' => [
+          [
+            'compare' => fn($arg) => TRUE,
+            'return' => fn($arg) => "OFFの名称: $arg",
+          ],
+        ],
+      ],
+      'text_with_summary' => [
+        'display_summary' => [
+          [
+            'compare' => (fn($arg) => $arg === FALSE),
+            'return' => '概要の入力欄を表示しない',
+          ],
+        ],
+        'required_summary' => [
+          [
+            'compare' => (fn($arg) => $arg === TRUE),
+            'return' => '概要を必須にする',
+          ],
+        ],
+        'allowed_formats' => [
+          [
+            'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
+            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+          ],
+        ],
+      ],
+      'text_long' => [
+        'allowed_formats' => [
+          [
+            'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
+            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+          ],
+        ],
+      ],
+      'text' => [
+        'max_length' => [
+          [
+            'compare' => (fn($arg) => is_numeric($arg)),
+            'return' => (fn($arg) => "文字数上限: " . $arg),
+          ],
+        ],
+        'allowed_formats' => [
+          [
+            'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
+            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+          ],
+        ],
+      ],
+      'string' => [
+        'max_length' => [
+          [
+            'compare' => (fn($arg) => is_numeric($arg)),
+            'return' => (fn($arg) => "文字数上限: " . $arg),
+          ],
+        ],
+      ],
+    ];
+
     $sheet = $this->sheet;
     $sheet->setTitle('項目 | Fields');
-    $headers = [
-      "No.", "分類\nType", "コンテンツタイプ\nContent Type", "項目名\n（日本語）", "Field name\n(English)",
-      "システム内部名称\nMachine Name\n(26文字以内)", "フィールドタイプ\nField Type", "必須\nRequired", "個数\nNumber", "初期値\nDefault Value", "翻訳可\nMultilingual", "とりうる値/制限\nField Settings", "備考\nRemarks",
-    ];
-    $sheet->fromArray($headers, NULL, 'A1');
     $row = $this->setHeaders([
-      [5, 12, 15, 20, 27, 31, 33.5, 8, 7, 21, 10, 46],
+      [5, 12, 15, 20, 27, 31, 33.5, 8, 7, 21, 10, 46, 30],
       [
         "番号", "分類", "コンテンツタイプ", "項目名（日本語）", "項目名（英語）",
         "システム内部名称\n（26文字以内）", "フィールドタイプ", "必須", "個数", "初期値", "翻訳可", "とりうる値/制限", "備考",
@@ -52,7 +343,7 @@ class FieldsSheet extends BaseSheet {
 
     $sheet->getRowDimension(1)->setRowHeight(48);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
 
     $this->setStyleCenter('G:K');
 
@@ -207,10 +498,51 @@ class FieldsSheet extends BaseSheet {
   private function formatFieldSettings(FieldDefinitionInterface $fieldDefinition): string {
     $fieldType = $fieldDefinition->getType();
     $settings = $fieldDefinition->getSettings();
+    $formattedSettings = [];
+    if (isset($this->fieldformatter[$fieldType])) {
+      $locale = $this->fieldformatter[$fieldType];
+      foreach ($settings as $key => $value) {
+        if (!isset($locale[$key])) {
+          continue;
+        }
+        foreach ($locale[$key] as $localeItem) {
+          // Ensure both 'compare' and 'return' are set.
+          if (!isset($localeItem['compare'], $localeItem['return'])) {
+            continue;
+          }
 
+          $compare = $localeItem['compare'];
+          $return = $localeItem['return'];
+          if ($compare($value, $settings)) {
+            $formattedSettings[] = is_callable($return) ? $return($value) : $value;
+          }
+        }
+      }
+      return implode("\n", $formattedSettings);
+    }
+
+    // depreciated. Convert to above
     // Custom formatting based on field type.
     switch ($fieldType) {
+      case 'entity_reference':
+        $label = '参照コンテンツタイプ: ';
+        $handlerSettings = $settings['handler_settings'];
+        $bundles = $handlerSettings['target_bundles'];
+        if (empty($bundles)) {
+          return 'No enabled types';
+        }
+        $formattedSettings[] = $label . implode(", ", $bundles);
+        if ($handlerSettings['auto_create']) {
+          $formattedSettings[] = '参照先のエンティティが存在しなければ作成する';
+        }
+        if ($handlerSettings['sort']['field'] !== '_none') {
+          $formattedSettings[] = "並び替え基準: " . $handlerSettings['sort']['field'];
+          $formattedSettings[] = "並べ替えの向き: " . ($handlerSettings['sort']['direction'] === 'ASC' ? '昇順' : '降順');
+        }
+        return implode("\n", $formattedSettings);
+
       case 'entity_reference_revisions':
+        $label = $settings['handler_settings']['negate'] ? '参照しないパラグラフタイプ: ' : '参照パラグラフタイプ: ';
         $bundles = $settings['handler_settings']['target_bundles_drag_drop'];
         $enabledBundles = [];
         foreach ($bundles as $bundle => $details) {
@@ -223,10 +555,12 @@ class FieldsSheet extends BaseSheet {
           return 'No enabled types';
         }
 
-        return implode(", ", $enabledBundles);
+        return $label . implode(", ", $enabledBundles);
     }
 
-    $formattedSettings = [];
+    if (!empty($settings)) {
+      $formattedSettings[] = "($fieldType)";
+    }
     foreach ($settings as $key => $value) {
       // Format the value as a string for readability.
       if (is_bool($value)) {

@@ -27,9 +27,9 @@ class TaxonomiesSheet extends BaseSheet {
       ],
     ]);
 
-    $row = $this->setEntities($sheet, $row);
+    $this->setEntities($sheet, $row);
 
-    $this->setStyle($sheet);
+    $this->setStyle();
     $this->setBorders();
 
     $centerAlignmentStyle = [
