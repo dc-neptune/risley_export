@@ -984,6 +984,7 @@ class BaseSheet {
         )) {
           unset($modules[$key]);
         }
+
       }
     }
 
@@ -1136,7 +1137,9 @@ class BaseSheet {
    * If includeCurrent is false, does not include the site running this command.
    */
   protected function getAllSites(bool $includeCurrent = TRUE):array {
-    return array_keys($this->siteAliasManager->getMultiple() ?: []);
+    return array_filter(array_keys($this->siteAliasManager->getMultiple() ?: []), function ($site) {
+      return !empty($this->siteAliasManager->get($site)->uri());
+    });
   }
 
   /**
@@ -1150,7 +1153,7 @@ class BaseSheet {
     $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
       $uri = $this->siteAliasManager->get($site)->uri();
       if (empty($uri)) {
-        return [];
+        return $result;
       }
       $command = "/opt/drupal/vendor/bin/drush --uri=\"$uri\" ev \"echo json_encode(\\Drupal::service('extension.list.module')->getList())\"";
       $jsonModules = shell_exec($command);
@@ -1167,7 +1170,8 @@ class BaseSheet {
 
       foreach ($modules as $machineName => &$module) {
         if (!is_array($module)) {
-          return $result;
+
+          continue;
         }
         // Add machine name to array for future indexing.
         $module['machine_name'] = $machineName;
@@ -1177,6 +1181,7 @@ class BaseSheet {
 
       return $result;
     }, []);
+
     return $sites;
   }
 

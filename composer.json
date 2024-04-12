@@ -3,7 +3,7 @@
   "description": "Exports drupalsettings into Excel files according to Risley format.",
   "type": "drupal-custom-module",
   "license": "GPL-2.0-or-later",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "scripts": {
   },
   "require": {
