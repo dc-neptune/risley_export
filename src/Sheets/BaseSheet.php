@@ -1348,7 +1348,7 @@ class BaseSheet {
       // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
       $uri = $this->siteAliasManager->get($site)->uri();
       if (empty($uri)) {
-        return [];
+        return $result;
       }
         $command = <<<EOT
           /opt/drupal/vendor/bin/drush --uri="$uri" ev '
@@ -1377,7 +1377,7 @@ class BaseSheet {
 
       foreach ($webforms as $machineName => &$webform) {
         if (!is_array($webform)) {
-          return $result;
+          continue;
         }
         // Add machine name to array for future indexing.
         $webform['machine_name'] = $machineName;

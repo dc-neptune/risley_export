@@ -606,7 +606,7 @@ class FieldsSheet extends BaseSheet {
       case 'entity_reference':
         $label = '参照コンテンツタイプ: ';
         $handlerSettings = $settings['handler_settings'];
-        $bundles = $handlerSettings['target_bundles'];
+        $bundles = $handlerSettings['target_bundles'] ?? NULL;
         if (empty($bundles)) {
           return '';
         }
