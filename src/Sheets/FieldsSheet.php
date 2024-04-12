@@ -166,6 +166,69 @@ class FieldsSheet extends BaseSheet {
           ],
         ],
       ],
+
+      'svg_image_field' => [
+        'file_directory' => [
+                [
+                  'compare' => fn($arg) => !empty($arg),
+                  'return' => fn($arg) => "ファイルディレクトリー: $arg",
+                ],
+        ],
+        'file_extensions' => [
+                [
+                  'compare' => fn($arg) => !empty($arg),
+                  'return' => fn($arg) => "許可拡張子: " . implode(", ", explode(" ", $arg)),
+                ],
+        ],
+        'alt_field' => [
+                [
+                  'compare' => fn($arg) => $arg === FALSE,
+                  'return' => fn($arg) => 'altの入力欄を表示しない',
+                ],
+        ],
+        'alt_field_required' => [
+                [
+                  'compare' => fn($arg, $settings) => $settings['alt_field'] === TRUE && $arg === TRUE,
+                  'return' => fn($arg) => 'altを必須にする',
+                ],
+        ],
+        'title_field' => [
+                [
+                  'compare' => fn($arg) => $arg === TRUE,
+                  'return' => fn($arg) => "タイトルの入力欄を表示する",
+                ],
+        ],
+        'title_field_required' => [
+                [
+                  'compare' => fn($arg, $settings) => $settings['alt_field'] === TRUE && $arg === TRUE,
+                  'return' => fn($arg) => 'タイトルを必須にする',
+                ],
+        ],
+        'max_filesize' => [
+                [
+                  'compare' => fn($arg) => !empty($arg),
+                  'return' => fn($arg) => "サイズ上限: $arg",
+                ],
+        ],
+        'description_field' => [
+                [
+                  'compare' => fn($arg) => $arg === TRUE,
+                  'return' => fn($arg) => "説明の入力欄を表示する",
+                ],
+        ],
+        'display_field' => [
+                [
+                  'compare' => fn($arg) => $arg === TRUE,
+                  'return' => fn($arg) => " 非表示を可能にするチェックボックスを追加する",
+                ],
+        ],
+        'display_default' => [
+                [
+                  'compare' => fn($arg, $settings) => $settings['display_field'] === TRUE && $arg === TRUE,
+                  'return' => fn($arg) => $arg ? "デフォルト: 表示" : "デフォルト: 非表示",
+                ],
+        ],
+      ],
       'list_string' => [
         'allowed_values' => [
           [
@@ -280,6 +343,14 @@ class FieldsSheet extends BaseSheet {
           ],
         ],
       ],
+      'video_embed_field' => [
+        'allowed_formats' => [
+              [
+                'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
+                'return' => (fn($arg) => "許可する提供者: " . $arg . implode(", ")),
+              ],
+        ],
+      ],
       'text_long' => [
         'allowed_formats' => [
           [
@@ -304,10 +375,18 @@ class FieldsSheet extends BaseSheet {
       ],
       'string' => [
         'max_length' => [
-          [
-            'compare' => (fn($arg) => is_numeric($arg)),
-            'return' => (fn($arg) => "文字数上限: " . $arg),
-          ],
+                [
+                  'compare' => (fn($arg) => is_numeric($arg)),
+                  'return' => (fn($arg) => "文字数上限: " . $arg),
+                ],
+        ],
+      ],
+      'string_long' => [
+        'case_sensitive' => [
+                [
+                  'compare' => (fn($arg) => $arg === TRUE),
+                  'return' => (fn($arg) => "大文字と小文字を区別"),
+                ],
         ],
       ],
     ];
