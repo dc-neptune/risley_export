@@ -180,7 +180,7 @@ class PermissionsSheet extends BaseSheet {
       for ($i = 0; $i < 6; $i++) {
         $col = $this->intToCol($i);
         $lastRow = $row - 1;
-        $range = "{$col}2:{$col}{$lastRow}";
+        $range = "{$col}2:$col$lastRow";
         $this->merge($range);
       }
     }
@@ -316,7 +316,7 @@ class PermissionsSheet extends BaseSheet {
             'vertical' => Alignment::VERTICAL_CENTER,
           ],
         ];
-        $sheet->getStyle("{$column}{$row}:{$column}{$row}")->applyFromArray($centerAlignmentStyle);
+        $sheet->getStyle("$column$row:$column$row")->applyFromArray($centerAlignmentStyle);
 
         $column = $this->incrementColumn($column);
       }
@@ -340,7 +340,7 @@ class PermissionsSheet extends BaseSheet {
     [$content_type, $library, $node_type] = explode('.', $config);
 
     if ($library === 'type' || $library === 'vocabulary') {
-      $node_type_entity = $this->entityTypeManager->getStorage("{$content_type}_{$library}")->load($node_type);
+      $node_type_entity = $this->entityTypeManager->getStorage("{$content_type}_$library")->load($node_type);
       if ($node_type_entity) {
         return $this->translate($node_type_entity);
       }

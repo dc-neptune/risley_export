@@ -19,7 +19,7 @@ class ParagraphsSheet extends BaseSheet {
 
     $sheet->fromArray([
       "No.", "Paragraph", "日本語名", "システム内部名称\nMachine name", "翻訳可\nMultilingual", "Remarks",
-    ], NULL, 'A1');
+    ]);
     $row = $this->setHeaders([
       [5, 30, 30, 45, 13, 30],
       [
@@ -30,7 +30,7 @@ class ParagraphsSheet extends BaseSheet {
       ],
     ]);
 
-    $row = $this->setEntities($sheet, $row);
+    $this->setEntities($sheet, $row);
 
     $lastRow = $sheet->getHighestDataRow("A");
     $lastColumn = $sheet->getHighestDataColumn("1");
@@ -73,7 +73,7 @@ class ParagraphsSheet extends BaseSheet {
   /**
    * Sets rows for entities on the Paragraphs sheet.
    */
-  protected function setRows(Worksheet $sheet, string $entityCategory, string $entityTypeId, array $entities, int $row): int {
+  protected function setRows(Worksheet $sheet, string $entityTypeId, array $entities, int $row): int {
     foreach ($entities as $entity) {
       $entityLabel = $entity->label();
       // Usually the machine name of the content type.
@@ -97,10 +97,9 @@ class ParagraphsSheet extends BaseSheet {
   /**
    * Sets entities.
    */
-  private function setEntities(Worksheet $sheet, int $row, string $entityCategory = 'paragraphs_type', string $entityTypeId = 'paragraph'): int {
-    $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
-    $row = $this->setRows($sheet, $entityCategory, $entityTypeId, $entities, $row);
-    return $row;
+  private function setEntities(Worksheet $sheet, int $row): void {
+    $entities = $this->entityTypeManager->getStorage('paragraphs_type')->loadMultiple();
+    $this->setRows($sheet, 'paragraph', $entities, $row);
   }
 
 }

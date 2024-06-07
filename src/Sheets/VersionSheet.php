@@ -53,18 +53,16 @@ class VersionSheet extends BaseSheet {
   /**
    * Sets rows on the Version sheet.
    */
-  protected function setRows(Worksheet $sheet, int $row, int $rows = 1): int {
+  protected function setRows(Worksheet $sheet, int $row, int $rows = 1): void {
     $lastRow = $row + $rows;
 
-    for ($row; $row < $lastRow; $row++) {
+    for (; $row < $lastRow; $row++) {
       $this->setCell($sheet, 'A', $row, '=ROW()-4');
       $this->setCell($sheet, 'B', $row, '');
       $this->setCell($sheet, 'C', $row, '');
       $this->setCell($sheet, 'D', $row, '');
       $this->setCell($sheet, 'E', $row, '');
     }
-
-    return $lastRow;
   }
 
 }

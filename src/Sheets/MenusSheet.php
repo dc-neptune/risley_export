@@ -115,7 +115,7 @@ class MenusSheet extends BaseSheet {
     $maxDepth = $this->findMaxDepth();
     foreach ($menus as $machineName => $menu) {
       $binaries = $this->buildMenuTree($this->entityTypeManager->getStorage('menu_link_content')->loadByProperties(['menu_name' => $machineName]));
-      $row = $this->setRow($binaries, $row, 0, ['=ROW()-1', "{$menu->label()} ({$machineName})"], $sheet, $maxDepth);
+      $row = $this->setRow($binaries, $row, 0, ['=ROW()-1', "{$menu->label()} ($machineName)"], $sheet, $maxDepth);
     }
 
     return $row;
@@ -190,7 +190,7 @@ class MenusSheet extends BaseSheet {
     $field_definitions = $this->entityFieldManager->getFieldDefinitions('menu_link_content', 'menu_link_content');
     $fields_array = [];
     foreach ($field_definitions as $field_name => $field_definition) {
-      if (strpos($field_name, 'field_') === 0) {
+      if (str_starts_with($field_name, 'field_')) {
         if ($ret === 'machineName') {
           $fields_array[] = $field_name;
         }
@@ -211,7 +211,7 @@ class MenusSheet extends BaseSheet {
       return FALSE;
     }
 
-    $plugin = $plugins["menu:{$menuName}"] ?? NULL;
+    $plugin = $plugins["menu:$menuName"] ?? NULL;
     if (!isset($plugin)) {
       return FALSE;
     }

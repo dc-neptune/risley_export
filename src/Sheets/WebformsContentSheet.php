@@ -2,6 +2,7 @@
 
 namespace Drupal\risley_export\Sheets;
 
+use Drupal\node\NodeInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
@@ -12,16 +13,16 @@ class WebformsContentSheet extends BaseSheet {
   /**
    * A list of webforms across all sites.
    *
-   * @var array|null
+   * @var array<mixed>|null
    */
-  protected $webforms;
+  protected array|NULL $webforms;
 
   /**
    * A list of all nodes that contain a webform in the layout builder.
    *
-   * @var array
+   * @var array<mixed>
    */
-  protected $webformNodes;
+  protected array $webformNodes;
 
   /**
    * Initializes the sheet.
@@ -160,6 +161,9 @@ class WebformsContentSheet extends BaseSheet {
             $method = $reflectionClass->getMethod('getConfiguration');
             $method->setAccessible(TRUE);
             $configuration = $method->invoke($component);
+            if (!is_array($configuration)) {
+              continue;
+            }
             if (
               isset($configuration['provider']) &&
               $configuration['provider'] === 'webform' &&
@@ -194,7 +198,14 @@ class WebformsContentSheet extends BaseSheet {
     $nodes = $this->webformNodes[$webformId];
     $languages = array_keys($this->languageManager->getNativeLanguages());
 
+    if (!is_array($nodes)) {
+      return '';
+    }
     foreach ($nodes as $i => $node) {
+      if (!($node instanceof NodeInterface)) {
+        $nodes[$i] = '';
+        continue;
+      }
       $path = $node->toUrl()->toString();
       $url_alias = $this->pathAliasManager->getAliasByPath($path);
       foreach ($languages as $language) {

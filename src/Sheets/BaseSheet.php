@@ -42,35 +42,35 @@ class BaseSheet {
    *
    * @var \PhpOffice\PhpSpreadsheet\Spreadsheet
    */
-  protected $spreadsheet;
+  protected Spreadsheet $spreadsheet;
 
   /**
    * The current sheet being built.
    *
    * @var \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet
    */
-  public $sheet;
+  public Worksheet $sheet;
 
   /**
    * Tracks the last value in each column.
    *
    * @var array<mixed>
    */
-  protected $lastColumnValues;
+  protected array $lastColumnValues;
 
   /**
    * Tracks whether the column has been skipped.
    *
    * @var array<string>
    */
-  protected $skippedColumns;
+  protected array $skippedColumns;
 
   /**
    * Tracks the cell where body starts and header ends.
    *
    * @var string
    */
-  protected $bodyCell;
+  protected string $bodyCell;
 
   /**
    * The options passed through the drush command.
@@ -81,7 +81,7 @@ class BaseSheet {
    *     filename: string
    *   }
    */
-  protected $options;
+  protected array $options;
 
   /**
    * The entity field manager.
@@ -89,7 +89,7 @@ class BaseSheet {
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    * @PHPStan-var EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * The entity type manager.
@@ -97,7 +97,7 @@ class BaseSheet {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    * @PHPStan-var EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The field type plugin manager.
@@ -105,7 +105,7 @@ class BaseSheet {
    * @var \Drupal\Core\Field\FieldTypePluginManagerInterface
    * @PHPStan-var FieldTypePluginManagerInterface
    */
-  protected $fieldTypePluginManager;
+  protected FieldTypePluginManagerInterface $fieldTypePluginManager;
 
   /**
    * The config factory.
@@ -113,7 +113,7 @@ class BaseSheet {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    * @PHPStan-var ConfigFactoryInterface
    */
-  protected $configFactory;
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The language manager.
@@ -121,7 +121,7 @@ class BaseSheet {
    * @var \Drupal\Core\Language\LanguageManagerInterface
    * @PHPStan-var LanguageManagerInterface
    */
-  protected $languageManager;
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * The entity repository.
@@ -129,7 +129,7 @@ class BaseSheet {
    * @var \Drupal\Core\Entity\EntityRepositoryInterface
    * @PHPStan-var EntityRepositoryInterface
    */
-  protected $entityRepository;
+  protected EntityRepositoryInterface $entityRepository;
 
   /**
    * The bundle info interface.
@@ -137,7 +137,7 @@ class BaseSheet {
    * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    * @PHPStan-var EntityTypeBundleInfoInterface
    */
-  protected $entityTypeBundleInfo;
+  protected EntityTypeBundleInfoInterface $entityTypeBundleInfo;
 
   /**
    * The module extension list.
@@ -145,7 +145,7 @@ class BaseSheet {
    * @var \Drupal\Core\Extension\ModuleExtensionList
    * @PHPStan-var ModuleExtensionList
    */
-  protected $moduleExtensionList;
+  protected ModuleExtensionList $moduleExtensionList;
 
   /**
    * The user permissions interface.
@@ -153,14 +153,14 @@ class BaseSheet {
    * @var \Drupal\user\PermissionHandlerInterface
    * @PHPStan-var PermissionHandlerInterface;
    */
-  protected $userPermissions;
+  protected PermissionHandlerInterface $userPermissions;
 
   /**
    * The logger service.
    *
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * The localization unique to this project.
@@ -168,49 +168,49 @@ class BaseSheet {
    * @var array<string>
    * @PHPStan-var array<string>;
    */
-  protected $localization;
+  protected array $localization;
 
   /**
    * The Info Parser service.
    *
    * @var \Drupal\Core\Extension\InfoParserInterface
    */
-  protected $infoParser;
+  protected InfoParserInterface $infoParser;
 
   /**
    * The module handler interface.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * The settings unique to this project.
    *
    * @var array<mixed>
    */
-  protected $settings;
+  protected array $settings;
 
   /**
    * A list of sites on the filesystem.
    *
    * @var array<string>
    */
-  protected $sites;
+  protected array $sites;
 
   /**
    * The site alias manager.
    *
    * @var \Consolidation\SiteAlias\SiteAliasManager
    */
-  protected $siteAliasManager;
+  protected SiteAliasManager $siteAliasManager;
 
   /**
    * The path alias manager.
    *
    * @var \Drupal\path_alias\AliasManagerInterface
    */
-  protected $pathAliasManager;
+  protected AliasManagerInterface $pathAliasManager;
 
   /**
    * Constructs a new RisleyExportCommands object.
@@ -312,7 +312,7 @@ class BaseSheet {
     $headers = [
       "No.",
     ];
-    $sheet->fromArray($headers, NULL, 'A1');
+    $sheet->fromArray($headers);
 
     $this->setStyle();
 
@@ -337,8 +337,6 @@ class BaseSheet {
    *   Warns developer that they messed up.
    */
   protected function setHeaders(array $headers, string $startCell = "A1"): int {
-    $row = 1;
-    $startCol = 0;
     if (preg_match('/([A-Z]+)(\d+)/', $startCell, $matches)) {
       $startCol = $this->colToInt($matches[1]);
       $row = (int) $matches[2];
@@ -364,11 +362,11 @@ class BaseSheet {
         if (is_array($cell)) {
           unset($cell['value']);
           if (!empty($cell)) {
-            $this->sheet->getStyle("{$col}{$row}:{$col}{$row}")->applyFromArray($cell);
+            $this->sheet->getStyle("$col$row:$col$row")->applyFromArray($cell);
           }
         }
         else {
-          $this->sheet->getStyle("{$col}{$row}:{$col}{$row}")->applyFromArray([
+          $this->sheet->getStyle("$col$row}:$col$row")->applyFromArray([
             'font' => [
               'name' => 'Meiryo UI',
               'size' => 10,
@@ -610,7 +608,7 @@ class BaseSheet {
   /**
    * Merges all cells.
    */
-  protected function merge(array|string $ranges) {
+  protected function merge(array|string $ranges):void {
 
     if (is_string($ranges)) {
       $ranges = [$ranges];
@@ -964,8 +962,8 @@ class BaseSheet {
 
         if ($origin !== 'all' && (
             ($origin === 'core' && $moduleOrigin !== 'core') ||
-            ($origin === 'contrib' && ($moduleOrigin === 'core' || strpos($module->getPath(), 'contrib') === FALSE)) ||
-            ($origin === 'custom' && strpos($module->getPath(), 'custom') === FALSE)
+            ($origin === 'contrib' && ($moduleOrigin === 'core' || str_contains($module->getPath(), 'contrib'))) ||
+            ($origin === 'custom' && str_contains($module->getPath(), 'custom'))
           )) {
           unset($modules[$key]);
         }
@@ -979,8 +977,8 @@ class BaseSheet {
 
         if ($origin !== 'all' && (
           ($origin === 'core' && $moduleOrigin !== 'core') ||
-          ($origin === 'contrib' && ($moduleOrigin === 'core' || strpos($module['subpath'], 'contrib') === FALSE)) ||
-          ($origin === 'custom' && strpos($module['subpath'], 'custom') === FALSE)
+          ($origin === 'contrib' && ($moduleOrigin === 'core' || str_contains($module['subpath'], 'contrib'))) ||
+          ($origin === 'custom' && str_contains($module['subpath'], 'custom'))
         )) {
           unset($modules[$key]);
         }
@@ -1017,7 +1015,7 @@ class BaseSheet {
     }
     elseif ($mixed instanceof EntityInterface) {
       $original = $mixed->label();
-      $translation = $this->entityRepository->getTranslationFromContext($mixed, 'ja')->label();
+      $translation = $this->entityRepository->getTranslationFromContext($mixed, 'ja')?->label();
       if (isset($original) && isset($translation) && $translation !== $mixed->label()) {
         return (string) $translation;
       }
@@ -1136,9 +1134,10 @@ class BaseSheet {
    *
    * If includeCurrent is false, does not include the site running this command.
    */
-  protected function getAllSites(bool $includeCurrent = TRUE):array {
+  protected function getAllSites():array {
     return array_filter(array_keys($this->siteAliasManager->getMultiple() ?: []), function ($site) {
-      return !empty($this->siteAliasManager->get($site)->uri());
+      $siteObj = $this->siteAliasManager->get($site);
+      return $siteObj && !empty($siteObj->uri());
     });
   }
 
@@ -1148,10 +1147,14 @@ class BaseSheet {
    * @param string $origin
    *   Filter the list by origin: 'all', 'core', 'contrib', or 'custom'.
    */
-  protected function getModulesAcrossSites($origin = 'all'):array|NULL {
-    $baseSheet = $this;
-    $sites = array_reduce($this->sites, function ($result, $site) use ($origin, $baseSheet) {
-      $uri = $this->siteAliasManager->get($site)->uri();
+  protected function getModulesAcrossSites(string $origin = 'all'):array|NULL {
+    return array_reduce($this->sites, function ($result, $site) use ($origin) {
+      $siteObj = $this->siteAliasManager->get($site);
+      if (!$siteObj) {
+        return $result;
+      }
+
+      $uri = $siteObj->uri();
       if (empty($uri)) {
         return $result;
       }
@@ -1177,12 +1180,10 @@ class BaseSheet {
         $module['machine_name'] = $machineName;
       }
 
-      $result[$site] = $baseSheet->getModules($origin, $modules);
+      $result[$site] = $this->getModules($origin, $modules);
 
       return $result;
     }, []);
-
-    return $sites;
   }
 
   /**
@@ -1219,8 +1220,7 @@ class BaseSheet {
           $firstPart = $parts[0];
           return strtoupper($firstPart);
         }, $enabledSites);
-        $string = implode(', ', $string);
-        return $string;
+        return implode(', ', $string);
       }
     }
     else {
@@ -1262,8 +1262,7 @@ class BaseSheet {
           $firstPart = $parts[0];
           return strtoupper($firstPart);
         }, $enabledSites);
-        $string = implode(', ', $string);
-        return $string;
+        return implode(', ', $string);
       }
     }
     else {
@@ -1327,9 +1326,7 @@ class BaseSheet {
       $entityType = $fieldSettings['target_type'] ?: $fieldSettings['handler'];
       $entityType = explode(':', $entityType);
       $entityType = end($entityType);
-      $entityLabel = (string) $this->entityTypeManager->getDefinition($entityType)?->getLabel();
-
-      return $entityLabel;
+      return (string) $this->entityTypeManager->getDefinition($entityType)?->getLabel();
     }
 
     if ($fieldType === 'file') {
@@ -1344,12 +1341,19 @@ class BaseSheet {
    * Gets all webforms from all sites.
    */
   protected function getWebformsAcrossSites():array|NULL {
-    $sites = array_reduce($this->sites, function ($result, $site) {
+    return array_reduce($this->sites, function ($result, $site) {
       // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
-      $uri = $this->siteAliasManager->get($site)->uri();
+      $siteObj = $this->siteAliasManager->get($site);
+
+      if (!$siteObj) {
+        return $result;
+      }
+
+      $uri = $siteObj->uri();
       if (empty($uri)) {
         return $result;
       }
+
         $command = <<<EOT
           /opt/drupal/vendor/bin/drush --uri="$uri" ev '
           if(!\\Drupal::service("entity_type.manager")->hasDefinition("webform")) return [];
@@ -1386,8 +1390,6 @@ class BaseSheet {
       $result[$site] = $webforms;
       return $result;
     }, []);
-
-    return $sites;
   }
 
 }

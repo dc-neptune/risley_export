@@ -3,6 +3,7 @@
 namespace Drupal\risley_export\Sheets;
 
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldConfigInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
@@ -14,16 +15,15 @@ class FieldsSheet extends BaseSheet {
   /**
    * Format field settings.
    *
-   * @var array
+   * @var array<array[]>
    */
-  protected $fieldformatter;
+  protected array $fieldformatter;
 
   /**
    * Initializes the sheet.
    */
   protected function initialize(): void {
     $this->fieldformatter = [
-
       'link' => [
         'title' => [
           [
@@ -339,7 +339,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_formats' => [
           [
             'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
-            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+            'return' => (fn($arg) => "許可するフォーマット: " . implode(", ", $arg)),
           ],
         ],
       ],
@@ -347,7 +347,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_formats' => [
               [
                 'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
-                'return' => (fn($arg) => "許可する提供者: " . $arg . implode(", ")),
+                'return' => (fn($arg) => "許可する提供者: " . implode(", ", $arg)),
               ],
         ],
       ],
@@ -355,7 +355,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_formats' => [
           [
             'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
-            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+            'return' => (fn($arg) => "許可するフォーマット: " . implode(", ", $arg)),
           ],
         ],
       ],
@@ -369,7 +369,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_formats' => [
           [
             'compare' => (fn($arg) => is_array($arg) && !empty($arg)),
-            'return' => (fn($arg) => "許可するフォーマット: " . $arg . implode(", ")),
+            'return' => (fn($arg) => "許可するフォーマット: " . implode(", ", $arg)),
           ],
         ],
       ],
@@ -659,8 +659,8 @@ class FieldsSheet extends BaseSheet {
   /**
    * Gets the default value for a field config.
    */
-  private function getDefaultFieldValue(FieldConfigInterface|NULL $fieldConfig, FieldDefinitionInterface $fieldDefinition):string {
-    if (!isset($fieldConfig)) {
+  private function getDefaultFieldValue(EntityInterface|NULL $fieldConfig, FieldDefinitionInterface $fieldDefinition):string {
+    if (!($fieldConfig instanceof FieldConfigInterface)) {
       return '';
     }
 
@@ -681,10 +681,10 @@ class FieldsSheet extends BaseSheet {
     elseif ($fieldType === 'boolean') {
       return $defaultValue[0]['value'] ? 'TRUE' : 'FALSE';
     }
-    elseif (is_array($defaultValue) && count($defaultValue) === 1) {
+    elseif (count($defaultValue) === 1) {
       return (string) $defaultValue[0]['value'] ?: '';
     }
-    elseif (is_array($defaultValue)) {
+    else {
       return json_encode($defaultValue) ?: '';
     }
   }

@@ -97,10 +97,9 @@ class ContentSheet extends BaseSheet {
   /**
    * Sets entities.
    */
-  private function setEntities(Worksheet $sheet, int $row, string $entityCategory = 'node_type'): int {
+  private function setEntities(Worksheet $sheet, int $row, string $entityCategory = 'node_type'): void {
     $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
-    $row = $this->setRows($sheet, $entityCategory, $entities, $row);
-    return $row;
+    $this->setRows($sheet, $entityCategory, $entities, $row);
   }
 
 }

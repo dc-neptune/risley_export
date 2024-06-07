@@ -36,7 +36,7 @@ class MediaSheet extends BaseSheet {
   /**
    * Sets rows for entities on the Media sheet.
    */
-  protected function setRows(Worksheet $sheet, string $entityCategory, string $entityTypeId, array $entities, int $row): int {
+  protected function setRows(Worksheet $sheet, string $entityTypeId, array $entities, int $row): int {
     foreach ($entities as $entity) {
       $entityLabel = $entity->label();
       // Usually the machine name of the content type.
@@ -51,7 +51,7 @@ class MediaSheet extends BaseSheet {
       foreach ($fieldDefinitions as $fieldDefinition) {
         if (method_exists($fieldDefinition, 'get')) {
           $settings = $fieldDefinition->get('settings');
-          if (is_array($settings) && isset($settings['max_filesize']) && !empty($settings['max_filesize'])) {
+          if (is_array($settings) && !empty($settings['max_filesize'])) {
             $uploadSize = $settings['max_filesize'];
             break;
           }
@@ -76,10 +76,9 @@ class MediaSheet extends BaseSheet {
   /**
    * Sets entities.
    */
-  private function setEntities(Worksheet $sheet, int $row, string $entityCategory = 'media_type', string $entityTypeId = 'media'): int {
-    $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
-    $row = $this->setRows($sheet, $entityCategory, $entityTypeId, $entities, $row);
-    return $row;
+  private function setEntities(Worksheet $sheet, int $row): void {
+    $entities = $this->entityTypeManager->getStorage('media_type')->loadMultiple();
+    $this->setRows($sheet, 'media', $entities, $row);
   }
 
 }

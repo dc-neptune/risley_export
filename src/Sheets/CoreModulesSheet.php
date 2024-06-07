@@ -13,9 +13,9 @@ class CoreModulesSheet extends BaseSheet {
   /**
    * A list of custom modules across all sites.
    *
-   * @var array|null
+   * @var array<mixed>|null
    */
-  protected $modules;
+  protected array|NULL $modules;
 
   /**
    * Initializes the sheet.

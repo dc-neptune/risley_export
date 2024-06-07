@@ -76,10 +76,9 @@ class TaxonomiesSheet extends BaseSheet {
   /**
    * Sets entities.
    */
-  private function setEntities(Worksheet $sheet, int $row, string $entityCategory = 'taxonomy_vocabulary', string $entityTypeId = 'taxonomy_term'): int {
-    $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
-    $row = $this->setRows($sheet, $entityCategory, $entityTypeId, $entities, $row);
-    return $row;
+  private function setEntities(Worksheet $sheet, int $row): void {
+    $entities = $this->entityTypeManager->getStorage('taxonomy_vocabulary')->loadMultiple();
+    $this->setRows($sheet, 'taxonomy_vocabulary', 'taxonomy_term', $entities, $row);
   }
 
 }
