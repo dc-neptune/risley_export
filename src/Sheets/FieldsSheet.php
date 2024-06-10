@@ -232,7 +232,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_values' => [
           [
             'compare' => fn($arg) => TRUE,
-            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key|$value", array_keys($arg), $arg)),
+            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key | $value", array_keys($arg), $arg)),
           ],
         ],
       ],
@@ -240,7 +240,7 @@ class FieldsSheet extends BaseSheet {
         'allowed_values' => [
           [
             'compare' => fn($arg) => TRUE,
-            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key|$value", array_keys($arg), $arg)),
+            'return' => fn($arg) => implode("\n", array_map(fn ($key, $value) => "$key | $value", array_keys($arg), $arg)),
           ],
         ],
       ],
@@ -601,19 +601,21 @@ class FieldsSheet extends BaseSheet {
 
     // depreciated. Convert to above
     // Custom formatting based on field type.
-    if (in_array($fieldType, ['entity_reference', 'entity_reference_revisions'])) {
+    if (in_array($fieldType, ['webform', 'entity_reference', 'entity_reference_revisions'])) {
       $handlerSettings = $settings['handler_settings'];
-      $handler = $settings['handler'] ?? NULL;
+      $handler = $settings['handler'] ?? ":";
+      [$default, $entityTypeId] = explode(':', $handler);
+      $entityDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
+      $bundleEntityId = $entityDefinition->getBundleEntityType() ?? $entityTypeId;
+      $entityTypeLabel = $entityDefinition->getLabel()->__toString();
       $bundles = $handlerSettings['target_bundles'] ?? [];
-      if (empty($bundles) || $handler !== 'default:paragraph') {
-        return '';
+      if ($default === 'default' && !empty($bundles)) {
+
+        $label = isset($handlerSettings['negate']) && $handlerSettings['negate'] ? "参照しない$entityTypeLabel: " : "参照する$entityTypeLabel: ";
+        $formattedSettings[] = $label . implode(", ", array_map(function ($bundle) use ($bundleEntityId) {
+            return $this->entityTypeManager->getStorage($bundleEntityId)->load($bundle)?->label() ?? $bundle;
+        }, $bundles));
       }
-
-      $label = $handlerSettings['negate'] ? '参照しないパラグラフタイプ: ' : '参照するパラグラフタイプ: ';
-
-      $formattedSettings[] = $label . implode(", ", array_map(function ($bundle) {
-          return $this->entityTypeManager->getStorage('paragraphs_type')->load($bundle)?->label() ?? $bundle;
-      }, $bundles));
 
       if (isset($handlerSettings['auto_create']) && $handlerSettings['auto_create']) {
         $formattedSettings[] = '参照先のエンティティが存在しなければ作成する';
