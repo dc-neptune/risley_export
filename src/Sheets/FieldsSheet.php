@@ -682,7 +682,7 @@ class FieldsSheet extends BaseSheet {
       return $defaultValue[0]['value'] ? 'TRUE' : 'FALSE';
     }
     elseif (count($defaultValue) === 1) {
-      return (string) $defaultValue[0]['value'] ?: '';
+      return (string) $defaultValue[0]['value'] ?? '';
     }
     else {
       return json_encode($defaultValue) ?: '';

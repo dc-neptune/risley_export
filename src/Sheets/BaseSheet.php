@@ -908,17 +908,17 @@ class BaseSheet {
    * Returns a list of menus for display.
    */
   protected function getEnabledMenus(NodeType $entity): string {
-    $settings = $entity->get('third_party_settings');
+    $settings = $entity->get('third_party_settings') ?? NULL;
     if (!is_array($settings)) {
       return '';
     }
 
-    $menuUi = $settings['menu_ui'];
+    $menuUi = $settings['menu_ui'] ?? NULL;
     if (!isset($menuUi)) {
       return '';
     }
 
-    $availableMenus = $menuUi['available_menus'];
+    $availableMenus = $menuUi['available_menus'] ?? NULL;
     if (!isset($availableMenus)) {
       return '';
     }
