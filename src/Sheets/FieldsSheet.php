@@ -616,13 +616,13 @@ class FieldsSheet extends BaseSheet {
         }
         if ($handlerSettings['sort']['field'] !== '_none') {
           $formattedSettings[] = "並び替え基準: " . $handlerSettings['sort']['field'];
-          $formattedSettings[] = "並べ替えの向き: " . ($handlerSettings['sort']['direction'] === 'ASC' ? '昇順' : '降順');
+          $formattedSettings[] = "並べ替えの向き: " . (isset($handlerSettings['sort']['direction']) && $handlerSettings['sort']['direction'] === 'ASC' ? '昇順' : '降順');
         }
         return implode("\n", $formattedSettings);
 
       case 'entity_reference_revisions':
-        $label = $settings['handler_settings']['negate'] ? '参照しないパラグラフタイプ: ' : '参照パラグラフタイプ: ';
-        $bundles = $settings['handler_settings']['target_bundles_drag_drop'];
+        $label = isset($settings['handler_settings']['negate']) && $settings['handler_settings']['negate'] ? '参照しないパラグラフタイプ: ' : '参照パラグラフタイプ: ';
+        $bundles = $settings['handler_settings']['target_bundles_drag_drop'] ?? [];
         $enabledBundles = [];
         foreach ($bundles as $bundle => $details) {
           if (isset($details['enabled']) && $details['enabled']) {
