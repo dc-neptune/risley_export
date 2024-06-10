@@ -7,6 +7,17 @@
  * This file applies optional settings. Rename it settings.php to use it.
  *
  * Comment out whatever you don't want.
+ *
+ * This file will be overwritten within /modules when updated or rebuilt.
+ * If you make any edits to it, it should be moved and saved at
+ * /sites/settings/risley_export.settings.php
+ *
+ * todo: Choose a more appropriate permanent save location.
+ *
+ * If this no longer needs to be run from drush as well as installed,
+ * then settings.php can be rebuilt as a typical configurable within
+ * the GUI. But so long as it needs to be run from drush without
+ * being installed on the site, this seems necessary.
  */
 
 /*
@@ -64,3 +75,11 @@ $settings['localization'] = FALSE;
  * beautiful end state.
  */
 $settings['merge'] = FALSE;
+
+
+/*
+ * If set to true, exports as a CSV
+ *
+ * Other tested types: 'xlsx', 'xls'
+ */
+$settings['filetype'] = 'csv';

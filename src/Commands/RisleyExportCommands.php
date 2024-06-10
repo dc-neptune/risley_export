@@ -165,8 +165,14 @@ class RisleyExportCommands extends DrushCommands {
    * Writes the spreadsheet to file.
    */
   private function saveSheet(): void {
-    // Write file to the specified path.
-    $writer = new Xlsx($this->spreadsheet);
+    $fileType = ucfirst($this->settings['filetype'] ?? 'xlsx'); // Default to 'Xlsx' if not set
+    $className = "PhpOffice\\PhpSpreadsheet\\Writer\\$fileType";
+
+    if (!class_exists($className)) {
+        throw new \Exception("Class $className does not exist.");
+    }
+
+    $writer = new $className($this->spreadsheet);
     try {
       $writer->save($this->options['filename']);
       if (!file_exists($this->options['filename'])) {
