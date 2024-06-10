@@ -80,6 +80,6 @@ $settings['merge'] = FALSE;
 /*
  * If set to true, exports as a CSV
  *
- * Other tested types: 'xlsx', 'xls'
+ * Other tested types: 'xlsx', 'xls', 'csv
  */
-$settings['filetype'] = 'csv';
+$settings['filetype'] = 'xlsx';

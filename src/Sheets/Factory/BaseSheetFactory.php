@@ -325,8 +325,9 @@ class BaseSheetFactory {
     $globalPath = DRUPAL_ROOT . '/sites/settings/risley_export.settings.php';
     $modulePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Settings/settings.php';
 
-    if (file_exists($modulePath))
+    if (file_exists($globalPath)) {
       include $globalPath;
+    }
     elseif (file_exists($modulePath)) {
       include $modulePath;
     }
