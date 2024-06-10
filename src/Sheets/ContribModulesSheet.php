@@ -30,7 +30,7 @@ class ContribModulesSheet extends BaseSheet {
         "番号", "モジュール", "システム内部名称", "有効/無効", "備考",
       ],
       [
-        "No.", "Module", "Machine Name", "ON/OFF", "Remarks",
+        "No.", "Module", "Machine Name", "ON/OFF", "Description",
       ],
     ]);
 

@@ -166,7 +166,6 @@ class FieldsSheet extends BaseSheet {
           ],
         ],
       ],
-
       'svg_image_field' => [
         'file_directory' => [
                 [
@@ -602,39 +601,28 @@ class FieldsSheet extends BaseSheet {
 
     // depreciated. Convert to above
     // Custom formatting based on field type.
-    switch ($fieldType) {
-      case 'entity_reference':
-        $label = '参照コンテンツタイプ: ';
-        $handlerSettings = $settings['handler_settings'];
-        $bundles = $handlerSettings['target_bundles'] ?? NULL;
-        if (empty($bundles)) {
-          return '';
-        }
-        $formattedSettings[] = $label . implode(", ", $bundles);
-        if ($handlerSettings['auto_create']) {
-          $formattedSettings[] = '参照先のエンティティが存在しなければ作成する';
-        }
-        if ($handlerSettings['sort']['field'] !== '_none') {
-          $formattedSettings[] = "並び替え基準: " . $handlerSettings['sort']['field'];
-          $formattedSettings[] = "並べ替えの向き: " . (isset($handlerSettings['sort']['direction']) && $handlerSettings['sort']['direction'] === 'ASC' ? '昇順' : '降順');
-        }
-        return implode("\n", $formattedSettings);
+    if (in_array($fieldType, ['entity_reference', 'entity_reference_revisions'])) {
+      $handlerSettings = $settings['handler_settings'];
+      $handler = $settings['handler'] ?? NULL;
+      $bundles = $handlerSettings['target_bundles'] ?? [];
+      if (empty($bundles) || $handler !== 'default:paragraph') {
+        return '';
+      }
 
-      case 'entity_reference_revisions':
-        $label = isset($settings['handler_settings']['negate']) && $settings['handler_settings']['negate'] ? '参照しないパラグラフタイプ: ' : '参照パラグラフタイプ: ';
-        $bundles = $settings['handler_settings']['target_bundles_drag_drop'] ?? [];
-        $enabledBundles = [];
-        foreach ($bundles as $bundle => $details) {
-          if (isset($details['enabled']) && $details['enabled']) {
-            $enabledBundles[] = $bundle;
-          }
-        }
+      $label = $handlerSettings['negate'] ? '参照しないパラグラフタイプ: ' : '参照するパラグラフタイプ: ';
 
-        if (empty($enabledBundles)) {
-          return '';
-        }
+      $formattedSettings[] = $label . implode(", ", array_map(function ($bundle) {
+          return $this->entityTypeManager->getStorage('paragraphs_type')->load($bundle)?->label() ?? $bundle;
+      }, $bundles));
 
-        return $label . implode(", ", $enabledBundles);
+      if (isset($handlerSettings['auto_create']) && $handlerSettings['auto_create']) {
+        $formattedSettings[] = '参照先のエンティティが存在しなければ作成する';
+      }
+      if (isset($handlerSettings['sort']['field']) && $handlerSettings['sort']['field'] !== '_none') {
+        $formattedSettings[] = "並び替え基準: " . $handlerSettings['sort']['field'];
+        $formattedSettings[] = "並べ替えの向き: " . (isset($handlerSettings['sort']['direction']) && $handlerSettings['sort']['direction'] === 'ASC' ? '昇順' : '降順');
+      }
+      return implode("\n", $formattedSettings);
     }
 
     if (!empty($settings)) {
