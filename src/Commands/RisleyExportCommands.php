@@ -126,8 +126,8 @@ class RisleyExportCommands extends DrushCommands {
       if ($absolutePath === FALSE) {
         throw new \Exception(dt('Unable to resolve the absolute path of the specified directory.'));
       }
-
-      $this->options['filename'] = $absolutePath . DIRECTORY_SEPARATOR . "_$filename.xlsx";
+      $fileType = $this->settings['filetype'] ?? 'xlsx';
+      $this->options['filename'] = $absolutePath . DIRECTORY_SEPARATOR . "_$filename.$fileType";
     }
     catch (\Exception $e) {
       $this->logger()?->error($e->getMessage());
