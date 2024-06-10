@@ -366,7 +366,7 @@ class BaseSheet {
           }
         }
         else {
-          $this->sheet->getStyle("$col$row}:$col$row")->applyFromArray([
+          $this->sheet->getStyle("$col$row:$col$row")->applyFromArray([
             'font' => [
               'name' => 'Meiryo UI',
               'size' => 10,
