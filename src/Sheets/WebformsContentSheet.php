@@ -82,9 +82,7 @@ class WebformsContentSheet extends BaseSheet {
 
     $this->setStyle();
 
-    foreach (['I:L', 'F:F'] as $range) {
-      $this->setStyleCenter($range);
-    }
+    $this->setStyleCenter(['I:L', 'F:F']);
 
     $this->setBorders();
 

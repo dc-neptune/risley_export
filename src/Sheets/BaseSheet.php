@@ -22,6 +22,7 @@ use Drupal\node\Entity\NodeType;
 use Drupal\path_alias\AliasManagerInterface;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\webform\Entity\Webform;
+use Drupal\webform\Plugin\WebformElementManager;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -213,6 +214,13 @@ class BaseSheet {
   protected AliasManagerInterface $pathAliasManager;
 
   /**
+   * The webform element manager.
+   *
+   * @var \Drupal\webform\Plugin\WebformElementManager
+   */
+  protected WebformElementManager $webformElementManager;
+
+  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
@@ -247,6 +255,8 @@ class BaseSheet {
    *   The site alias manager.
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
+   * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
+   *   The webform element manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
@@ -264,7 +274,8 @@ class BaseSheet {
     ModuleHandlerInterface $module_handler,
     array $settings,
     SiteAliasManager $site_alias_manager,
-    AliasManagerInterface $path_alias_manager
+    WebformElementManager $webform_element_manager,
+    AliasManagerInterface $path_alias_manager,
     ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -285,6 +296,7 @@ class BaseSheet {
     $this->siteAliasManager = $site_alias_manager;
     $this->pathAliasManager = $path_alias_manager;
     $this->sites = $this->getAllSites();
+    $this->webformElementManager = $webform_element_manager;
   }
 
   /**
@@ -553,6 +565,27 @@ class BaseSheet {
   /**
    * UTILITIES.
    */
+
+  /**
+   * Converts an array of sites into a string.
+   */
+  protected function buildSites(array $sites): string {
+    if (empty($sites)) {
+      return $this->buildCheck(FALSE);
+    }
+    elseif (count($this->sites) === count($sites)) {
+      return count($sites) > 1 ? 'ALL' : $this->buildCheck(TRUE);
+    }
+    else {
+      $string = array_map(function ($site) {
+        $siteWithoutAt = str_replace('@', '', $site);
+        $parts = explode('.', $siteWithoutAt);
+        $firstPart = $parts[0];
+        return strtoupper($firstPart);
+      }, $sites);
+      return implode(', ', $string);
+    }
+  }
 
   /**
    * Gets all cells in a range.
@@ -1089,7 +1122,7 @@ class BaseSheet {
   protected function setStyleCenter(array|string $range):void {
     if (is_array($range)) {
       foreach ($range as $_range) {
-        $this->setStyleHeader($_range);
+        $this->setStyleCenter($_range);
       }
       return;
     }
@@ -1207,21 +1240,7 @@ class BaseSheet {
         }
       }
 
-      if (empty($enabledSites)) {
-        return $this->buildCheck(FALSE);
-      }
-      elseif (count($this->sites) === count($enabledSites)) {
-        return $this->buildCheck(TRUE);
-      }
-      else {
-        $string = array_map(function ($site) {
-          $siteWithoutAt = str_replace('@', '', $site);
-          $parts = explode('.', $siteWithoutAt);
-          $firstPart = $parts[0];
-          return strtoupper($firstPart);
-        }, $enabledSites);
-        return implode(', ', $string);
-      }
+      return $this->buildSites($enabledSites);
     }
     else {
       return 'ERR';
@@ -1249,21 +1268,7 @@ class BaseSheet {
         }
       }
 
-      if (empty($enabledSites)) {
-        return $this->buildCheck(FALSE);
-      }
-      elseif (count($this->sites) === count($enabledSites)) {
-        return $this->buildCheck(TRUE);
-      }
-      else {
-        $string = array_map(function ($site) {
-          $siteWithoutAt = str_replace('@', '', $site);
-          $parts = explode('.', $siteWithoutAt);
-          $firstPart = $parts[0];
-          return strtoupper($firstPart);
-        }, $enabledSites);
-        return implode(', ', $string);
-      }
+      return $this->buildSites($enabledSites);
     }
     else {
       return 'ERR';

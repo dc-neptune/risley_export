@@ -605,9 +605,9 @@ class FieldsSheet extends BaseSheet {
       $handlerSettings = $settings['handler_settings'];
       $handler = $settings['handler'] ?? ":";
       [$default, $entityTypeId] = explode(':', $handler);
-      $entityDefinition = $this->entityTypeManager->getDefinition($entityTypeId);
-      $bundleEntityId = $entityDefinition->getBundleEntityType() ?? $entityTypeId;
-      $entityTypeLabel = $entityDefinition->getLabel()->__toString();
+      $entityDefintion = $this->entityTypeManager->getDefinition($entityTypeId);
+      $bundleEntityId = $entityDefintion->getBundleEntityType() ?? $entityTypeId;
+      $entityTypeLabel = $entityDefintion->getLabel()->__toString();
       $bundles = $handlerSettings['target_bundles'] ?? [];
       if ($default === 'default' && !empty($bundles)) {
 

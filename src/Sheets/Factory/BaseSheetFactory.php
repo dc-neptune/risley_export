@@ -15,7 +15,10 @@ use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\path_alias\AliasManagerInterface;
+use Drupal\risley_export\Sheets\Basesheet;
 use Drupal\user\PermissionHandlerInterface;
+use Drupal\webform\Element\Webform;
+use Drupal\webform\Plugin\WebformElementManager;
 use Drush\Drush;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -34,7 +37,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    * @PHPStan-var EntityFieldManagerInterface
    */
-  protected $entityFieldManager;
+  protected EntityFieldManagerInterface $entityFieldManager;
 
   /**
    * The entity type manager.
@@ -42,7 +45,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    * @PHPStan-var EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The field type plugin manager.
@@ -50,7 +53,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Field\FieldTypePluginManagerInterface
    * @PHPStan-var FieldTypePluginManagerInterface
    */
-  protected $fieldTypePluginManager;
+  protected FieldTypePluginManagerInterface $fieldTypePluginManager;
 
 
   /**
@@ -59,7 +62,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    * @PHPStan-var ConfigFactoryInterface
    */
-  protected $configFactory;
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The language manager.
@@ -67,7 +70,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Language\LanguageManagerInterface
    * @PHPStan-var LanguageManagerInterface
    */
-  protected $languageManager;
+  protected LanguageManagerInterface $languageManager;
 
   /**
    * The entity repository.
@@ -75,7 +78,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Entity\EntityRepositoryInterface
    * @PHPStan-var EntityRepositoryInterface
    */
-  protected $entityRepository;
+  protected EntityRepositoryInterface $entityRepository;
 
   /**
    * The bundle info interface.
@@ -83,7 +86,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
    * @PHPStan-var EntityTypeBundleInfoInterface
    */
-  protected $entityTypeBundleInfo;
+  protected EntityTypeBundleInfoInterface $entityTypeBundleInfo;
 
   /**
    * The module extension list.
@@ -91,7 +94,7 @@ class BaseSheetFactory {
    * @var \Drupal\Core\Extension\ModuleExtensionList
    * @PHPStan-var ModuleExtensionList
    */
-  protected $moduleExtensionList;
+  protected ModuleExtensionList $moduleExtensionList;
 
   /**
    * The user permissions interface.
@@ -99,14 +102,14 @@ class BaseSheetFactory {
    * @var \Drupal\user\PermissionHandlerInterface
    * @PHPStan-var PermissionHandlerInterface;
    */
-  protected $userPermissions;
+  protected PermissionHandlerInterface $userPermissions;
 
   /**
    * The logger service.
    *
    * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * The localization unique to this project.
@@ -114,42 +117,49 @@ class BaseSheetFactory {
    * @var array<string>
    * @PHPStan-var array<string>;
    */
-  protected $localization;
+  protected array $localization;
 
   /**
    * The Info Parser service.
    *
    * @var \Drupal\Core\Extension\InfoParserInterface
    */
-  protected $infoParser;
+  protected InfoParserInterface $infoParser;
 
   /**
    * The module handler interface.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * The settings unique to this project.
    *
    * @var array<mixed>
    */
-  protected $settings;
+  protected array $settings;
 
   /**
    * The site alias manager.
    *
    * @var \Consolidation\SiteAlias\SiteAliasManager
    */
-  public $siteAliasManager;
+  public SiteAliasManager $siteAliasManager;
 
   /**
    * The path alias manager.
    *
    * @var \Drupal\path_alias\AliasManagerInterface
    */
-  protected $pathAliasManager;
+  protected AliasManagerInterface $pathAliasManager;
+
+  /**
+   * The webform element manager.
+   *
+   * @var \Drupal\webform\Plugin\WebformElementManager
+   */
+  protected WebformElementManager $webformElementManager;
 
   /**
    * Constructs a new BaseSheetFactory object.
@@ -180,6 +190,8 @@ class BaseSheetFactory {
    *   The module handler interface.
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
+   * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
+   *   The webform element manager.
    * @param \Consolidation\SiteAlias\SiteAliasManager|null $site_alias_manager
    *   The site alias manager.
    */
@@ -197,7 +209,8 @@ class BaseSheetFactory {
     InfoParserInterface $info_parser,
     ModuleHandlerInterface $module_handler,
     AliasManagerInterface $path_alias_manager,
-    SiteAliasManager $site_alias_manager = NULL
+    WebformElementManager $webform_element_manager,
+    SiteAliasManager $site_alias_manager = NULL,
   ) {
     $this->entityFieldManager = $entity_field_manager;
     $this->entityTypeManager = $entity_type_manager;
@@ -215,12 +228,13 @@ class BaseSheetFactory {
     $this->settings = $this->buildSettings();
     $this->pathAliasManager = $path_alias_manager;
     $this->siteAliasManager = $site_alias_manager ?? Drush::aliasManager();
+    $this->webformElementManager = $webform_element_manager;
   }
 
   /**
    * Creates an extension of BaseSheet.
    */
-  public function create(Spreadsheet $spreadsheet, string $key, array $options):Worksheet|NULL {
+  public function create(Spreadsheet $spreadsheet, string $key, array $options, bool $debug = FALSE):BaseSheet|Worksheet|NULL {
     $className = 'Drupal\\risley_export\\Sheets\\' . $key . 'Sheet';
 
     if (!class_exists($className)) {
@@ -244,10 +258,11 @@ class BaseSheetFactory {
       $this->moduleHandler,
       $this->settings,
       $this->siteAliasManager,
-      $this->pathAliasManager
+      $this->webformElementManager,
+      $this->pathAliasManager,
     );
     $customSheet->setSpreadsheet($spreadsheet, $options);
-    return $customSheet->sheet;
+    return $debug ? $customSheet : $customSheet->sheet;
   }
 
   /**
@@ -322,14 +337,10 @@ class BaseSheetFactory {
    */
   public function buildSettings(): array {
     $settings = [];
-    $globalPath = DRUPAL_ROOT . '/sites/settings/risley_export.settings.php';
-    $modulePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Settings/settings.php';
+    $filePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Settings/settings.php';
 
-    if (file_exists($globalPath)) {
-      include $globalPath;
-    }
-    elseif (file_exists($modulePath)) {
-      include $modulePath;
+    if (file_exists($filePath)) {
+      include $filePath;
     }
 
     return $settings;

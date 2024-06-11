@@ -53,13 +53,6 @@ class RisleyExportCommands extends DrushCommands {
   protected $spreadsheet;
 
   /**
-   * The settings unique to this project.
-   *
-   * @var array<mixed>
-   */
-  protected $settings;
-
-  /**
    * Constructs a new RisleyExportCommands object.
    *
    * @param \Drupal\risley_export\Sheets\Factory\BaseSheetFactory $sheet_factory
@@ -86,7 +79,7 @@ class RisleyExportCommands extends DrushCommands {
    * @usage risley_export:export --path=/path/to/directory/from/docroot
    *   Exports content types and fields to the specified directory.
    */
-  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'file' => NULL, 'filename' => 'file']): void {
+  public function exportSheetData(array $options = ['path' => 'modules/custom/risley_export/files', 'file' => NULL, 'filename' => 'file.xlsx']): void {
     if (!isset($options['path']) || !is_string($options['path']) ||
       (!is_string($options['file']) && $options['file'] !== NULL) ||
       !isset($options['filename']) || !is_string($options['filename'])) {
@@ -94,7 +87,6 @@ class RisleyExportCommands extends DrushCommands {
     }
     $this->options = $options;
     $this->path = $options['path'];
-    $this->settings = $this->buildSettings();
 
     if (!$this->options['file'] || $this->options['file'] === 'data') {
       $this->buildSpreadsheet('drupalsettings_data', ['Version', 'Fields', 'Content', 'Taxonomies', 'Media', 'Paragraphs']);
@@ -134,7 +126,8 @@ class RisleyExportCommands extends DrushCommands {
       if ($absolutePath === FALSE) {
         throw new \Exception(dt('Unable to resolve the absolute path of the specified directory.'));
       }
-      $this->options['filename'] = $absolutePath . DIRECTORY_SEPARATOR . "_$filename";
+
+      $this->options['filename'] = $absolutePath . DIRECTORY_SEPARATOR . "_$filename.xlsx";
     }
     catch (\Exception $e) {
       $this->logger()?->error($e->getMessage());
@@ -143,35 +136,17 @@ class RisleyExportCommands extends DrushCommands {
     $this->spreadsheet = new Spreadsheet();
 
     foreach ($sheetNames as $sheetName) {
-      $this->buildSheet($sheetName);
+      $this->buildSheet($sheetName, $this->options);
     }
 
-    $this->save($this->spreadsheet, $this->options['filename']);
-  }
-
-  /**
-   * Converts the settings.php.
-   */
-  public function buildSettings(): array {
-    $settings = [];
-    $globalPath = DRUPAL_ROOT . '/sites/settings/risley_export.settings.php';
-    $modulePath = DRUPAL_ROOT . '/modules/custom/risley_export/src/Sheets/Settings/settings.php';
-
-    if (file_exists($globalPath)) {
-      include $globalPath;
-    }
-    elseif (file_exists($modulePath)) {
-      include $modulePath;
-    }
-
-    return $settings;
+    $this->saveSheet();
   }
 
   /**
    * Builds the given sheet.
    */
-  private function buildSheet(string $key): Worksheet|NULL {
-    $sheet = $this->sheetFactory->create($this->spreadsheet, $key, $this->options);
+  private function buildSheet(string $key, array $options): Worksheet|NULL {
+    $sheet = $this->sheetFactory->create($this->spreadsheet, $key, $options);
     if (!isset($sheet)) {
       return NULL;
     }
@@ -189,32 +164,16 @@ class RisleyExportCommands extends DrushCommands {
   /**
    * Writes the spreadsheet to file.
    */
-  private function save($sheet, $fileName): void {
-    if ($this->settings['filetype'] === 'csv' && $sheet->getSheetCount() > 1) {
-      foreach ($this->spreadsheet->getAllSheets() as $i => $worksheet) {
-        $tempSpreadsheet = new Spreadsheet();
-        $tempSpreadsheet->removeSheetByIndex(0);
-        $tempSpreadsheet->addSheet($worksheet);
-        $this->save($tempSpreadsheet, "{$fileName}_$i");
-      }
-      return;
-    }
-    $fileType = ucfirst(is_string($this->settings['filetype']) ? $this->settings['filetype'] : 'xlsx');
-    $className = "PhpOffice\\PhpSpreadsheet\\Writer\\$fileType";
-
-    if (!class_exists($className)) {
-      throw new \Exception("Class $className does not exist.");
-    }
-    $fileName = $fileName . '.' . ($this->settings['filetype'] ?? 'xlsx');
-
-    $writer = new $className($sheet);
+  private function saveSheet(): void {
+    // Write file to the specified path.
+    $writer = new Xlsx($this->spreadsheet);
     try {
-      $writer->save($fileName);
-      if (!file_exists($fileName)) {
+      $writer->save($this->options['filename']);
+      if (!file_exists($this->options['filename'])) {
         $this->logger()?->error(dt('Failed to create the file in the specified directory. Check permissions and path.'));
       }
-      elseif (file_exists($fileName)) {
-        $this->logger()?->success(dt('Content types and fields have been exported to !filename', ['!filename' => $fileName]));
+      elseif (file_exists($this->options['filename'])) {
+        $this->logger()?->success(dt('Content types and fields have been exported to !filename', ['!filename' => $this->options['filename']]));
       }
     }
     catch (\Exception $e) {
