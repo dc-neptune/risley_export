@@ -13,6 +13,7 @@ use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannel;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\path_alias\AliasManagerInterface;
 use Drupal\risley_export\Sheets\Basesheet;
@@ -107,9 +108,9 @@ class BaseSheetFactory {
   /**
    * The logger service.
    *
-   * @var \Psr\Log\LoggerInterface
+   * @var \Drupal\Core\Logger\LoggerChannel
    */
-  protected LoggerInterface $logger;
+  protected LoggerChannel  $logger;
 
   /**
    * The localization unique to this project.
@@ -191,7 +192,7 @@ class BaseSheetFactory {
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
    * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
-   *   The webform element manager.
+   *    The webform element manager.
    * @param \Consolidation\SiteAlias\SiteAliasManager|null $site_alias_manager
    *   The site alias manager.
    */

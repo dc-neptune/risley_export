@@ -14,8 +14,8 @@ services:
       - '@logger.factory'
       - '@info_parser'
       - '@module_handler'
-      - '@plugin.manager.webform.element'
       - '@path_alias.manager'
+      - '@plugin.manager.webform.element'
   risley_export.commands:
     class: \Drupal\risley_export\Commands\RisleyExportCommands
     arguments:

@@ -253,10 +253,10 @@ class BaseSheet {
    *   The settings.
    * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
    *   The site alias manager.
+   * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
+   *    The webform element manager.
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
-   * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
-   *   The webform element manager.
    */
   public function __construct(
     EntityFieldManagerInterface $entity_field_manager,
