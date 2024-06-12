@@ -17,13 +17,6 @@ class WebformsOptionsSheet extends BaseSheet {
   protected array|NULL $webforms;
 
   /**
-   * A merged webform containing all fields across all sites.
-   *
-   * @var array<mixed>|null
-   */
-  public array|NULL $allWebforms;
-
-  /**
    * Initializes the sheet.
    */
   protected function initialize(): void {
@@ -43,7 +36,7 @@ class WebformsOptionsSheet extends BaseSheet {
     ]);
 
     // Content types.
-    $this->setWebforms($sheet, $row, 'node_type', 'node');
+    $this->setWebforms($sheet, $row);
 
     // $sheet->getRowDimension(1)->setRowHeight(48);
     $this->setStyle();
@@ -58,7 +51,6 @@ class WebformsOptionsSheet extends BaseSheet {
    */
   protected function getWebformFieldsAcrossSites():array|NULL {
     return array_reduce($this->sites, function ($result, $site) {
-      // $command = "/opt/drupal/vendor/bin/drush $site ev 'echo json_encode(array_map(function(\$webform) { return \$webform->toArray(); }, \\Drupal::service(\"entity_type.manager\")->getStorage(\"webform\")->loadMultiple()));'";
       $siteObj = $this->siteAliasManager->get($site);
 
       if (!$siteObj) {
@@ -173,7 +165,9 @@ class WebformsOptionsSheet extends BaseSheet {
     $children = $this->getChildren($array);
 
     foreach ($children as $_key => $child) {
-      if ( $key === $_key || $this->hasDescendant($child, $key)) return TRUE;
+      if ($key === $_key || $this->hasDescendant($child, $key)) {
+        return TRUE;
+      }
     }
 
     return FALSE;
@@ -188,7 +182,9 @@ class WebformsOptionsSheet extends BaseSheet {
     $sites = [];
 
     foreach ($this->webforms as $site => $webforms) {
-      if (!isset($webforms[$webformName])) continue;
+      if (!isset($webforms[$webformName])) {
+        continue;
+      }
       $array = $webforms[$webformName];
       if ($this->hasDescendant($array, $elementName)) {
         $sites[] = $site;
@@ -204,9 +200,7 @@ class WebformsOptionsSheet extends BaseSheet {
    * Merges two trees together.
    */
   private function mergeArrays(array &$array1, array $array2, string $parentKey = ''): array {
-    [$children1, $children2] = array_map(function ($array) {
-      return $this->getChildren($array);
-    }, [$array1, $array2]);
+    $children2 = $this->getChildren($array2);
 
     /*
      *  Since the spec sheet expects all values to be the same across sites,
@@ -216,24 +210,12 @@ class WebformsOptionsSheet extends BaseSheet {
       return $this->getAttributes($array);
     }, [$array1, $array2]);
     foreach ($attributes2 as $key => $value) {
-      if (!isset($attributes1[$key]) || $attributes1[$key] !== $value)
+      if (!isset($attributes1[$key]) || $attributes1[$key] !== $value) {
         $this->logger->notice(dt("Webform element key '!key' of '!parentKey' differs on various sites. Found '!value'", ['!parentKey' => $parentKey, '!key' => $key, '!value' => $value]));
+      }
     }
-
-    if (!isset($children2)) {
-      return $array1;
-    }
-    //
-    //    var_dump('Merging ' . ($tree1['key'] ?? 'UNSET') . ' and ' . ($tree2['key'] ?? 'UNSET'));
-    //    var_dump('Original ' . ($tree1['key'] ?? 'UNSET') . ' has ' . count($tree1['children']) . ' children');
-    //    var_dump('New ' . ($tree2['key'] ?? 'UNSET') . ' has ' . count($tree2['children']) . ' children');
-    //    if (isset($tree2['key']) && $tree2['key'] === 'regional_questions') {
-    //      var_dump('Merging regional_questions');
-    //      var_dump($tree2['children']);
-    //    }.
     foreach ($children2 as $key => $child) {
       if (!isset($array1[$key])) {
-        // var_dump('The original ' . ($tree1['key'] ?? 'UNSET') . ' needs the child ' . $child['key']);.
         $array1[$key] = $child;
       }
       else {
@@ -247,11 +229,11 @@ class WebformsOptionsSheet extends BaseSheet {
   /**
    * Sets entities in the Fields sheet.
    */
-  private function setWebforms(Worksheet $sheet, int $row, string $entityCategory, string $entityTypeId): int {
+  private function setWebforms(Worksheet $sheet, int $row): void {
     $sites = $this->webforms;
     // Build a master list of all webforms, each with all possible fields.
     $allWebforms = [];
-    foreach ($sites as $site => $webforms) {
+    foreach ($sites as $webforms) {
       foreach ($webforms as $id => $elements) {
         if (!isset($allWebforms[$id])) {
           $allWebforms[$id] = $elements;
@@ -269,7 +251,58 @@ class WebformsOptionsSheet extends BaseSheet {
     foreach ($allWebforms as $webformName => $allElements) {
       $title = $allElements['#title'];
       $category = $allElements['#categories'][0] ?? '';
+      if (!(isset($this->settings['hideReadOnly']) && $this->settings['hideReadOnly'] === TRUE)) {
+        $row = $this->setBaseFields($webformName, $row, $webformName, $title, $category);
+      }
       $row = $this->setElements($allElements, $row, $webformName, $title, $category);
+    }
+  }
+
+  /**
+   * Sets the arbitrary base fields incorrectly.
+   */
+  private function setBaseFields(string $bundle, int $row, string $webformName, string $title = '', string $category = ''): int {
+    /*
+     *  The bundle can be called even when it doesn't exist on the current site,
+     *  so I suspect none of this actually matters.
+     */
+    $definitions = $this->entityFieldManager->getFieldDefinitions('webform_submission', $bundle);
+    foreach ($definitions as $machineName => $definition) {
+      $cells = [
+        // Number.
+        '=ROW()-2',
+        // Category.
+        $category,
+        // Webform.
+        $title,
+        // Title.
+        $definition->getLabel()->__toString(),
+        // Machine name.
+        $machineName,
+        // Field type.
+        $this->getFieldTypeLabel($definition),
+        // Required. Since it isn't editable, it isn't required.
+        $this->buildCheck($definition->isRequired()),
+        // Number. This is probably wrong, but who cares.
+        method_exists($definition, 'isMultiple') && $definition->isMultiple() ? 'N' : 1,
+        // Prepopulate. Can't be, right?
+        $this->buildCheck(FALSE),
+        // Default value.
+        'Webform自動入力',
+        // Placeholder.
+        '-',
+        // Field settings.
+        '@todo',
+        // Site.
+        $this->getSitesFor($webformName, $webformName),
+        // Remarks.
+        '',
+      ];
+      foreach ($cells as $i => $content) {
+        $this->setCell($this->sheet, $this->intToCol($i), $row, $content, in_array($i, [1, 2]));
+      }
+
+      $row++;
     }
     return $row;
   }

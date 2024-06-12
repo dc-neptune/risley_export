@@ -476,7 +476,7 @@ class FieldsSheet extends BaseSheet {
     $entities = $this->entityTypeManager->getStorage($entityCategory)->loadMultiple();
     $universalFields = $this->getUniversalFields($entities, $entityTypeId);
 
-    if (!(isset($this->settings['hideReadOnly']) &&$this->settings['hideReadOnly'] === TRUE)) {
+    if (!(isset($this->settings['hideReadOnly']) && $this->settings['hideReadOnly'] === TRUE)) {
       $row = $this->setUniversalFields($sheet, $universalFields, 'コンテンツ共通項目 (Read Only)', $row, $entities, $entityTypeId);
     }
 

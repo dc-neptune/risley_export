@@ -12,7 +12,7 @@
  * If you make any edits to it, it should be moved and saved at
  * /sites/settings/risley_export.settings.php
  *
- * todo: Choose a more appropriate permanent save location.
+ * @todo Choose a more appropriate permanent save location.
  *
  * If this no longer needs to be run from drush as well as installed,
  * then settings.php can be rebuilt as a typical configurable within

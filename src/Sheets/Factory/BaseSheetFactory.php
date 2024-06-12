@@ -18,7 +18,6 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\path_alias\AliasManagerInterface;
 use Drupal\risley_export\Sheets\Basesheet;
 use Drupal\user\PermissionHandlerInterface;
-use Drupal\webform\Element\Webform;
 use Drupal\webform\Plugin\WebformElementManager;
 use Drush\Drush;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -192,7 +191,7 @@ class BaseSheetFactory {
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
    * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
-   *    The webform element manager.
+   *   The webform element manager.
    * @param \Consolidation\SiteAlias\SiteAliasManager|null $site_alias_manager
    *   The site alias manager.
    */

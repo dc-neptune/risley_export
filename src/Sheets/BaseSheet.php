@@ -39,6 +39,16 @@ use Psr\Log\LoggerInterface;
 class BaseSheet {
 
   /**
+   * The string displayed for true values.
+   */
+  public string $trueLabel = "○";
+
+  /**
+   * The string displayed for true values.
+   */
+  public string $falseLabel = "-";
+
+  /**
    * The spreadsheet being built.
    *
    * @var \PhpOffice\PhpSpreadsheet\Spreadsheet
@@ -254,7 +264,7 @@ class BaseSheet {
    * @param \Consolidation\SiteAlias\SiteAliasManager $site_alias_manager
    *   The site alias manager.
    * @param \Drupal\webform\Plugin\WebformElementManager $webform_element_manager
-   *    The webform element manager.
+   *   The webform element manager.
    * @param \Drupal\path_alias\AliasManagerInterface $path_alias_manager
    *   The path alias manager.
    */
@@ -437,6 +447,17 @@ class BaseSheet {
       ],
     ];
     $this->sheet->getStyle(($this->bodyCell) . ':' . $this->sheet->getHighestColumn() . $this->sheet->getHighestRow())->applyFromArray($styleArray);
+
+    // Center empty values.
+    foreach ($this->sheet->getRowIterator() as $row) {
+      $cellIterator = $row->getCellIterator();
+      foreach ($cellIterator as $cell) {
+        if ($cell->getValue() === $this->trueLabel || $cell->getValue() === $this->falseLabel) {
+          $this->sheet->getStyle($cell->getCoordinate())->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+          $this->sheet->getStyle($cell->getCoordinate())->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        }
+      }
+    }
   }
 
   /**
@@ -764,7 +785,7 @@ class BaseSheet {
    * Sets true or false display.
    */
   protected function buildCheck(mixed $bool, string $trueLabel = "", string $falseLabel = ""): string {
-    return $bool ? "○" . $trueLabel : "-" . $falseLabel;
+    return $bool ? $this->trueLabel . $trueLabel : $this->falseLabel . $falseLabel;
   }
 
   /**
