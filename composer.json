@@ -9,7 +9,8 @@
   "require": {
     "composer/installers": "^2.2",
     "drupal/core": "^10",
-    "phpoffice/phpspreadsheet": "^2.0"
+    "phpoffice/phpspreadsheet": "^2.0",
+    "drupal/webform": "^6.0"
   },
   "authors": [
     {

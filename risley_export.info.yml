@@ -3,3 +3,5 @@ type: module
 description: 'Risley export module provides a suite of drush commands for automating spec files.'
 package: Risley
 core_version_requirement: ^9 || ^10
+dependencies:
+  - webform:webform
