@@ -606,7 +606,11 @@ class FieldsSheet extends BaseSheet {
       $handler = $settings['handler'] ?? ":";
       [$default, $entityTypeId] = array_pad(explode(':', $handler), 2, null);
       if (empty($entityTypeId)) {
-        $this->logger->warning(dt("Improperly set handler '' set for field_type '!field_type'. Correct format is 'default:entity_type_id'.", ['!handler' => $handler, '!field_type' => $fieldType]));
+        /*
+            There are certain references that do not have handler, such as layouts.
+            Layouts do not need to be handled, so just early return.
+            This is not an error. It is just lazy coding.
+         */
         return implode("\n", $formattedSettings);
       }
       $entityDefintion = $this->entityTypeManager->getDefinition($entityTypeId);
