@@ -604,7 +604,11 @@ class FieldsSheet extends BaseSheet {
     if (in_array($fieldType, ['webform', 'entity_reference', 'entity_reference_revisions'])) {
       $handlerSettings = $settings['handler_settings'];
       $handler = $settings['handler'] ?? ":";
-      [$default, $entityTypeId] = explode(':', $handler);
+      [$default, $entityTypeId] = array_pad(explode(':', $handler), 2, null);
+      if (empty($entityTypeId)) {
+        $this->logger->warning(dt("Improperly set handler '' set for field_type '!field_type'. Correct format is 'default:entity_type_id'.", ['!handler' => $handler, '!field_type' => $fieldType]));
+        return implode("\n", $formattedSettings);
+      }
       $entityDefintion = $this->entityTypeManager->getDefinition($entityTypeId);
       $bundleEntityId = $entityDefintion->getBundleEntityType() ?? $entityTypeId;
       $entityTypeLabel = $entityDefintion->getLabel()->__toString();
